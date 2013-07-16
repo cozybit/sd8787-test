@@ -21,6 +21,7 @@ MWL8787_TM_CMD_FW               = 1
 MWL8787_CMD_GET_HW_SPEC         = 0x0003
 MWL8787_CMD_802_11_RESET        = 0x0005
 MWL8787_CMD_802_11_MAC_ADDRESS  = 0x004d
+MWL8787_CMD_802_11_RF_CHANNEL   = 0x001d
 
 CMD_ACT_GET                     = 0
 CMD_ACT_SET                     = 1
@@ -75,6 +76,25 @@ def mac_address(ifindex, address=None):
         ])
     ])
 
+def set_channel(ifindex, channel=None):
+    """ set/get channel """
+    if not channel:
+        channel = 0
+        action = CMD_ACT_GET
+    else:
+        action = CMD_ACT_SET
+    BANDCHAN = 0 # 2.4 ghz, 20mhz, manual
+    payload = struct.pack("<HH2B", action, channel, 0, BANDCHAN)
+
+    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
+        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
+        netlink.Nested(NL80211_ATTR_TESTDATA, [
+            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
+            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_RF_CHANNEL),
+            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
+        ])
+    ])
+
 if __name__ == "__main__":
     ifindex = if_nametoindex('wlan0')
     hdr, attrs = send_cmd(NL80211_CMD_GET_WIPHY,
@@ -87,3 +107,4 @@ if __name__ == "__main__":
     reset(ifindex)
     mac_address(ifindex)
     mac_address(ifindex, address=[0x01,0x02,0x03,0x04,0x05,0x06])
+    set_channel(ifindex, 7)

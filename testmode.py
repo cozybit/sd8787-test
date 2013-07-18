@@ -22,6 +22,9 @@ MWL8787_CMD_GET_HW_SPEC         = 0x0003
 MWL8787_CMD_802_11_RESET        = 0x0005
 MWL8787_CMD_802_11_MAC_ADDRESS  = 0x004d
 MWL8787_CMD_802_11_RF_CHANNEL   = 0x001d
+MWL8787_CMD_802_11_MAC_CONTROL  = 0x0028
+MWL8787_CMD_802_11_RADIO_CONTROL = 0x001c
+MWL8787_CMD_802_11_CMD_MONITOR = 0x0102
 
 CMD_ACT_GET                     = 0
 CMD_ACT_SET                     = 1
@@ -95,6 +98,65 @@ def set_channel(ifindex, channel=None):
         ])
     ])
 
+def set_mac_ctl(ifindex, mask=None):
+    """ set/get mac_ctl (filter) """
+    if not mask:
+        mask = 0
+    payload = struct.pack("<H", mask)
+
+    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
+        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
+        netlink.Nested(NL80211_ATTR_TESTDATA, [
+            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
+            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_MAC_CONTROL),
+            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
+        ])
+    ])
+
+def radio_control(ifindex, on=False):
+    """ set/get radio on/off """
+    if not on:
+        control = 0
+        action = CMD_ACT_GET
+    else:
+        control = 1
+        action = CMD_ACT_SET
+# non-zero is on
+    payload = struct.pack("<HH", action, control)
+
+    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
+        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
+        netlink.Nested(NL80211_ATTR_TESTDATA, [
+            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
+            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_RADIO_CONTROL),
+            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
+        ])
+    ])
+
+def set_monitor(ifindex, on=False):
+    """ set/get monitor mode """
+    if not on:
+        enable = 0
+        action = CMD_ACT_GET
+    else:
+        enable = 1
+        action = CMD_ACT_SET
+
+    MONITOR_MODE_ALL = 7
+    TYPE = 0x012A
+    LEN = 2
+    payload = struct.pack("<HHHHH2B", action, enable, MONITOR_MODE_ALL, TYPE, LEN, 0, 1)
+
+    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
+        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
+        netlink.Nested(NL80211_ATTR_TESTDATA, [
+            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
+            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_CMD_MONITOR),
+            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
+        ])
+    ])
+
+
 if __name__ == "__main__":
     ifindex = if_nametoindex('wlan0')
     hdr, attrs = send_cmd(NL80211_CMD_GET_WIPHY,
@@ -108,3 +170,11 @@ if __name__ == "__main__":
     mac_address(ifindex)
     mac_address(ifindex, address=[0x01,0x02,0x03,0x04,0x05,0x06])
     set_channel(ifindex, 7)
+
+    radio_control(ifindex, True)
+    #set_monitor(ifindex, True)
+    # RXon, mcast, bcast, promisc, allmulti, 802.11, mgmt
+    PROMISC=0b0101000111100001
+    set_mac_ctl(ifindex, PROMISC)
+    #NONE=0b0
+    #set_mac_ctl(ifindex, NONE)

@@ -79,6 +79,12 @@ def mac_address(ifindex, address=None):
         ])
     ])
 
+    testdata = attrs[NL80211_ATTR_TESTDATA].nested()
+    action, address = struct.unpack("<H6s",
+        testdata[MWL8787_TM_ATTR_DATA].str())
+    return address
+
+
 def set_channel(ifindex, channel=None):
     """ set/get channel """
     if not channel:
@@ -167,7 +173,8 @@ if __name__ == "__main__":
     print 'wiphy name: %s' % attrs[NL80211_ATTR_WIPHY_NAME].str()
 
     reset(ifindex)
-    mac_address(ifindex)
+    address = mac_address(ifindex)
+    print 'mac addr: %s' % (':'.join('%02x' % ord(x) for x in address))
     mac_address(ifindex, address=[0x01,0x02,0x03,0x04,0x05,0x06])
     set_channel(ifindex, 7)
 

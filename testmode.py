@@ -163,8 +163,40 @@ def set_monitor(ifindex, on=False):
     ])
 
 
+import getopt, sys
+
+def usage():
+    print "usage:"
+    print "     -i <iface>"
+    print "     -t <testname>"
+    print "     -a <testargs>"
+
 if __name__ == "__main__":
-    ifindex = if_nametoindex('wlan0')
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "i:t:a:")
+    except getopt.GetoptError as err:
+        # print help information and exit:
+        print str(err) # will print something like "option -a not recognized"
+        usage()
+        sys.exit(2)
+    iface = None
+    test = None
+    testargs = None
+    for o, a in opts:
+        if o == "-i":
+            iface = a
+        elif o == "-t":
+            test = a
+        elif o == "-a":
+            testargs = a
+        else:
+            assert False, "unhandled option"
+
+    if not iface or not test:
+        usage()
+        sys.exit(2)
+
+    ifindex = if_nametoindex(iface)
     hdr, attrs = send_cmd(NL80211_CMD_GET_WIPHY,
                  [netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex)])
 
@@ -172,16 +204,21 @@ if __name__ == "__main__":
     print 'wiphy: %s' % attrs[NL80211_ATTR_WIPHY].u32()
     print 'wiphy name: %s' % attrs[NL80211_ATTR_WIPHY_NAME].str()
 
-    reset(ifindex)
-    address = mac_address(ifindex)
-    print 'mac addr: %s' % (':'.join('%02x' % ord(x) for x in address))
-    mac_address(ifindex, address=[0x01,0x02,0x03,0x04,0x05,0x06])
-    set_channel(ifindex, 7)
-
-    radio_control(ifindex, True)
-    #set_monitor(ifindex, True)
+    if test == "reset":
+        reset(ifindex)
+    elif test == "set_radio":
+        radio_control(ifindex, True if testargs == "on" else False)
+    elif test == "set_mac":
+        testargs = [int(x) for x in testargs.split(":")]
+        mac_address(ifindex, address=testargs)
+    elif test == "get_mac":
+        address = mac_address(ifindex)
+        print 'mac addr: %s' % (':'.join('%02x' % ord(x) for x in address))
+    elif test == "set_channel":
+        set_channel(ifindex, int(testargs))
+    elif test == "set_monitor":
+        set_monitor(ifindex, True if testargs == "on" else False)
+    elif test == "set_mac_ctl":
     # RXon, mcast, bcast, promisc, allmulti, 802.11, mgmt
-    PROMISC=0b0101000111100001
-    set_mac_ctl(ifindex, PROMISC)
-    #NONE=0b0
-    #set_mac_ctl(ifindex, NONE)
+    #PROMISC=0b0101000111100001
+        set_mac_ctl(ifindex, int(testargs, 16))

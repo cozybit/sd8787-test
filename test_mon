@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+# turning on the card and getting _something_ is good enough for this test
 source `dirname $0`/common.sh
 
 reload_card
@@ -6,5 +8,4 @@ reload_card
 set_monitor $IFACE
 link_up $IFACE
 sudo ./testmode.py -i$IFACE -t set_mac_ctrl -a 0xffff
-sudo tcpdump -i $IFACE
-
+timeout 5 sudo tcpdump -i $IFACE -c1 || fail "didn't get any frames!"

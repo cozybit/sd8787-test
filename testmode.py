@@ -119,15 +119,14 @@ def set_mac_ctl(ifindex, mask=None):
         ])
     ])
 
-def radio_control(ifindex, on=False):
+def radio_control(ifindex, on=False, action=CMD_ACT_SET):
     """ set/get radio on/off """
     if not on:
         control = 0
-        action = CMD_ACT_GET
     else:
         control = 1
-        action = CMD_ACT_SET
-# non-zero is on
+
+    # non-zero is on
     payload = struct.pack("<HH", action, control)
 
     hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
@@ -139,14 +138,12 @@ def radio_control(ifindex, on=False):
         ])
     ])
 
-def set_monitor(ifindex, on=False):
+def set_monitor(ifindex, on=False, action=CMD_ACT_SET):
     """ set/get monitor mode """
     if not on:
         enable = 0
-        action = CMD_ACT_GET
     else:
         enable = 1
-        action = CMD_ACT_SET
 
     MONITOR_MODE_ALL = 7
     TYPE = 0x012A

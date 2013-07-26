@@ -10,5 +10,5 @@ reload_card
 
 set_monitor $IFACE
 link_up $IFACE
-sudo ./testmode.py -i$IFACE -t set_channel -a $KNOWN_CH
+fw_set_ch $IFACE $KNOWN_CH
 timeout 3 sudo tcpdump -i$IFACE | grep $KNOWN_SSID || fail "SSID not found, must be wrong channel!"

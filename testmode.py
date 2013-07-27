@@ -17,6 +17,7 @@ MWL8787_TM_ATTR_FW_CMD_ID       = 2
 MWL8787_TM_ATTR_DATA            = 3
 
 MWL8787_TM_CMD_FW               = 1
+MWL8787_TM_CMD_DATA             = 2
 
 MWL8787_CMD_GET_HW_SPEC         = 0x0003
 MWL8787_CMD_802_11_RESET        = 0x0005
@@ -159,6 +160,55 @@ def set_monitor(ifindex, on=False, action=CMD_ACT_SET):
         ])
     ])
 
+def send_data(ifindex, data=None):
+    if not data:
+        print "please specify a payload"
+        raise
+
+# just ask the fw for mac address :)
+    mac = mac_address(ifindex)
+
+    # 802.11 header + data
+    # construct broadcast data frame with ifindex's address as TA
+    TYPE_SUBTYPE = 0x4208 # normal data
+    DURATION = 0x0
+    RA = struct.pack("6B", *(6 * [0xff]))
+    TA = mac
+    SA = mac
+    FRAG_SEQ = 0
+    frame = struct.pack("<HH", TYPE_SUBTYPE, DURATION)
+    frame += RA + TA + SA
+    frame += struct.pack("<H", FRAG_SEQ)
+#XXX: convert data to ASCII?
+    frame += data
+
+    # frame must be 4-byte aligned
+    pad = len(frame) % 4
+    for n in range(pad):
+        frame = struct.pack("x") + frame
+
+    # 8787 tx descriptor
+    BSS_TYPE = 0x3 # TYPE_TM
+    BSS_NUM = 0
+    LEN = len(frame)
+    OFFSET = 16 + pad # 18 == desc. length must start on 4-byte boundary
+    TYPE = 0x5 # 802.11
+    RES1 = 0
+    PRIORITY = 0
+    FLAGS = 0
+    DELAY = 0
+    RES2 = 0
+
+    desc = struct.pack("<BBHHHIBBBB", BSS_TYPE, BSS_NUM, LEN, OFFSET, TYPE, RES1, PRIORITY, FLAGS, DELAY, RES2)
+    payload = desc + frame
+
+    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
+        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
+        netlink.Nested(NL80211_ATTR_TESTDATA, [
+            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_DATA),
+            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
+        ])
+    ])
 
 import getopt, sys
 
@@ -219,3 +269,5 @@ if __name__ == "__main__":
     # RXon, mcast, bcast, promisc, allmulti, 802.11, mgmt
     #PROMISC=0b0101000111100001
         set_mac_ctl(ifindex, int(testargs, 16))
+    elif test == "send_data":
+        send_data(ifindex, testargs)

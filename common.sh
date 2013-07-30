@@ -66,5 +66,9 @@ fw_tx_data() {
 	testmode $iface send_data $data
 }
 
+if2mac () {
+	iw dev | grep $1 -A3 | grep addr | awk '{print $2}'
+}
+
 [ -z "$DRIVER" -o -z "$IFACE" ] && fail "please specify driver and iface"
 [ ! -z "$MON_IFACE" ] && set_monitor $MON_IFACE

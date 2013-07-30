@@ -170,7 +170,7 @@ def send_data(ifindex, data=None):
 
     # 802.11 header + data
     # construct broadcast data frame with ifindex's address as TA
-    TYPE_SUBTYPE = 0x4208 # normal data
+    TYPE_SUBTYPE = 0x0008 # unprotected normal data, DS = 11
     DURATION = 0x0
     RA = struct.pack("6B", *(6 * [0xff]))
     TA = mac
@@ -179,7 +179,10 @@ def send_data(ifindex, data=None):
     frame = struct.pack("<HH", TYPE_SUBTYPE, DURATION)
     frame += RA + TA + SA
     frame += struct.pack("<H", FRAG_SEQ)
-#XXX: convert data to ASCII?
+# LLC header
+    frame += struct.pack("6B", * [0xaa, 0xaa, 0x03, 0x0, 0x00, 0x00])
+# ethertype (IP)
+    frame += struct.pack("2B", * [0x08, 0x00])
     frame += data
 
     # frame must be 4-byte aligned

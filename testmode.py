@@ -273,6 +273,8 @@ if __name__ == "__main__":
     print 'wiphy: %s' % attrs[NL80211_ATTR_WIPHY].u32()
     print 'wiphy name: %s' % attrs[NL80211_ATTR_WIPHY_NAME].str()
 
+    import __main__
+
     if test == "reset":
         reset(ifindex)
     elif test == "set_radio":
@@ -295,3 +297,6 @@ if __name__ == "__main__":
         send_data(ifindex, testargs)
     elif test == "send_all":
         send_all(ifindex)
+    elif test in dir(__main__):
+        fn = getattr(__main__, test)
+        fn(ifindex, testargs)

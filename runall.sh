@@ -2,7 +2,7 @@
 
 mkdir -p logs
 
-tests="test_mon test_set_channel test_tx"
+tests="2-1-test_drv_load test_mon test_set_channel test_tx"
 
 for test in $tests; do
 	echo running $test

@@ -1,0 +1,11 @@
+#!/bin/bash
+source `dirname $0`/common.sh
+
+reload_card
+
+mac=`if2mac $IFACE`
+
+if [[ $mac != '00:19:88'* ]]; then
+    fail
+fi
+

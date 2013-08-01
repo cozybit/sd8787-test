@@ -27,6 +27,8 @@ MWL8787_CMD_802_11_RF_CHANNEL   = 0x001d
 MWL8787_CMD_802_11_MAC_CONTROL  = 0x0028
 MWL8787_CMD_802_11_RADIO_CONTROL = 0x001c
 MWL8787_CMD_802_11_CMD_MONITOR = 0x0102
+MWL8787_CMD_BEACON_SET           = 0x00cb
+MWL8787_CMD_BEACON_CTRL          = 0x010e
 
 CMD_ACT_GET                     = 0
 CMD_ACT_SET                     = 1
@@ -231,6 +233,39 @@ def send_all(ifindex):
 # 4addr mesh data
     pkt = get_mesh_4addr_data(mymac, dstmac, PAYLOAD)
     fw_send_frame(ifindex, str(pkt))
+
+def fw_set_beacon(ifindex, meshid, intval):
+
+    intval = int(intval)
+    mymac = mac_address(ifindex)
+    mymac = ':'.join('%02x' % ord(x) for x in mymac)
+
+    frame = get_mesh_beacon(mymac, meshid)
+
+    # set beacon data
+    hdr = struct.pack("<H", len(frame))
+    payload = hdr + frame
+    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
+        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
+        netlink.Nested(NL80211_ATTR_TESTDATA, [
+            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
+            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_BEACON_SET),
+            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
+        ])
+    ])
+
+    # enable beaconing at the given interval
+    payload = struct.pack("<HHH", CMD_ACT_SET, 1, intval)
+    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
+        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
+        netlink.Nested(NL80211_ATTR_TESTDATA, [
+            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
+            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_BEACON_CTRL),
+            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
+        ])
+    ])
+
+
 
 import getopt, sys
 

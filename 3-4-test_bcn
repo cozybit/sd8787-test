@@ -1,0 +1,28 @@
+#!/bin/bash
+source `dirname $0`/common.sh
+
+CH=1
+CAP_FILE=out.cap
+
+reload_card
+
+fw_set_ch $IFACE $CH
+set_channel $MON_IFACE $CH
+
+# start capturing on MON_IFACE
+start_capture $MON_IFACE $CAP_FILE &
+sleep 2
+cap_pid=$!
+
+MESHID="some_meshid"
+INTVAL=500
+fw_set_beacon $IFACE $MESHID $INTVAL
+
+sleep 1
+sudo killall tcpdump
+# inspect capture for frame
+IFACE_ADDR=`if2mac $IFACE`
+
+# FIXME check for interval, TSF, meshid etc.
+FOUND=`tshark -r$CAP_FILE -R"wlan.addr == $IFACE_ADDR" | wc -l`
+[ "$FOUND" -lt 1 ] && fail "couldn't find frames from $IFACE_ADDR"

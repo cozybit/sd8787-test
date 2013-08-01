@@ -204,6 +204,34 @@ def fw_send_frame(ifindex, frame):
         ])
     ])
 
+# construct and send a frame of each needed type
+def send_all(ifindex):
+    MESHID="bazooka"
+    PAYLOAD="hello"
+
+    mymac = mac_address(ifindex)
+    mymac = ':'.join('%02x' % ord(x) for x in mymac)
+
+# beacon
+    pkt = get_mesh_beacon(mymac, MESHID)
+    fw_send_frame(ifindex, str(pkt))
+
+# peering open
+    pkt = get_mesh_peering_open(mymac, dstmac, MESHID)
+    fw_send_frame(ifindex, str(pkt))
+
+# bcast mesh data
+    pkt = get_mesh_mcast_data(mymac, "ff:ff:ff:ff:ff:ff", PAYLOAD)
+    fw_send_frame(ifindex, str(pkt))
+
+# PREQ
+    pkt = get_mesh_preq(mymac, "0c:0c:0c:0c:0c:0c")
+    fw_send_frame(ifindex, str(pkt))
+
+# 4addr mesh data
+    pkt = get_mesh_4addr_data(mymac, dstmac, PAYLOAD)
+    fw_send_frame(ifindex, str(pkt))
+
 import getopt, sys
 
 def usage():
@@ -265,3 +293,5 @@ if __name__ == "__main__":
         set_mac_ctl(ifindex, int(testargs, 16))
     elif test == "send_data":
         send_data(ifindex, testargs)
+    elif test == "send_all":
+        send_all(ifindex)

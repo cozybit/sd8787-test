@@ -235,10 +235,9 @@ def send_all(ifindex):
 import getopt, sys
 
 def usage():
-    print "usage:"
+    print "usage: prog [opts] [testargs]"
     print "     -i <iface>"
     print "     -t <testname>"
-    print "     -a <testargs>"
 
 if __name__ == "__main__":
     try:
@@ -250,14 +249,12 @@ if __name__ == "__main__":
         sys.exit(2)
     iface = None
     test = None
-    testargs = None
+    arglist = args
     for o, a in opts:
         if o == "-i":
             iface = a
         elif o == "-t":
             test = a
-        elif o == "-a":
-            testargs = a
         else:
             assert False, "unhandled option"
 
@@ -275,6 +272,7 @@ if __name__ == "__main__":
 
     import __main__
 
+    testargs = arglist[0]
     if test == "reset":
         reset(ifindex)
     elif test == "set_radio":
@@ -299,4 +297,4 @@ if __name__ == "__main__":
         send_all(ifindex)
     elif test in dir(__main__):
         fn = getattr(__main__, test)
-        fn(ifindex, testargs)
+        fn(ifindex, **testargs)

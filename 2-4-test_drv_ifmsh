@@ -1,0 +1,7 @@
+#!/bin/bash
+#
+# see if card can do mesh mode
+source `dirname $0`/common.sh
+
+set_mesh $IFACE
+sudo iw dev $IFACE info | grep 'type mesh' >/dev/null || fail

@@ -67,7 +67,7 @@ fw_tx_data() {
 }
 
 if2mac () {
-	iw dev | grep $1 -A3 | grep addr | awk '{print $2}'
+	sudo iw dev | grep $1 -A3 | grep addr | awk '{print $2}'
 }
 
 [ -z "$DRIVER" -o -z "$IFACE" ] && fail "please specify driver and iface"

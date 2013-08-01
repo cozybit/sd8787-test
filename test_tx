@@ -3,6 +3,7 @@ source `dirname $0`/common.sh
 
 CH=6
 CAP_FILE=out.cap
+PAYLOAD="hello"
 
 reload_card
 
@@ -17,16 +18,16 @@ sleep 2
 cap_pid=$!
 
 # pew pew
-fw_tx_data $IFACE "hello"
-fw_tx_data $IFACE "hello"
-fw_tx_data $IFACE "hello"
-fw_tx_data $IFACE "hello"
-fw_tx_data $IFACE "hello"
-fw_tx_data $IFACE "hello"
+fw_tx_data $IFACE $PAYLOAD
+fw_tx_data $IFACE $PAYLOAD
+fw_tx_data $IFACE $PAYLOAD
+fw_tx_data $IFACE $PAYLOAD
+fw_tx_data $IFACE $PAYLOAD
+fw_tx_data $IFACE $PAYLOAD
 
 sleep 1
 sudo killall tcpdump
 # inspect capture for frame
 IFACE_ADDR=`if2mac $IFACE`
-FOUND=`tshark -r$CAP_FILE -R"wlan.addr == $IFACE_ADDR" | wc -l`
+FOUND=`tshark -r$CAP_FILE -R"wlan.addr == $IFACE_ADDR && data.data == $PAYLOAD" | wc -l`
 [ "$FOUND" -lt 1 ] && fail "couldn't find frames from $IFACE_ADDR"

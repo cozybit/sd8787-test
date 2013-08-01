@@ -32,6 +32,13 @@ set_monitor() {
 	link_up $iface
 }
 
+set_mesh() {
+	local iface=$1
+	link_down $iface
+	sudo iw $iface set type mp || fail
+	link_up $iface
+}
+
 start_capture() {
 	local iface=$1
 	local file=$2

@@ -2,7 +2,7 @@
 
 mkdir -p logs
 
-tests="test_mon test_set_channel"
+tests="test_mon test_set_channel test_tx"
 
 for test in $tests; do
 	echo running $test

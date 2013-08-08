@@ -12,7 +12,7 @@ testmode() {
 	local testcase=$2
 	shift 2
 	local args=$@
-	sudo ./testmode.py -i$iface -t $testcase $args || fail
+	sudo ./testmode.py -i$iface -t $testcase $args || fail "$testcase failed!"
 }
 
 reload_card() {

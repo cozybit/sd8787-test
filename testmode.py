@@ -5,6 +5,8 @@ import ctypes.util
 import genetlink, netlink
 from dot11frames import *
 
+CAP_FILE = "/tmp/test_cap.cap"
+
 NL80211_CMD_GET_WIPHY           = 1
 NL80211_CMD_TESTMODE            = 45
 
@@ -266,6 +268,63 @@ def fw_set_beacon(ifindex, meshid, intval):
     ])
 
 
+def matches_beacon(tx, rx):
+    try:
+        rx[Dot11]
+    except IndexError:
+        return False
+
+    if (tx.subtype != rx.subtype or
+        tx.type != rx.type or
+        tx.addr1 != rx.addr1 or
+        tx.addr2 != rx.addr2 or
+        tx.addr3 != rx.addr3 or
+        tx.beacon_interval != rx.beacon_interval or
+        tx.cap != rx.cap):
+           return False
+
+    return True
+
+from subprocess import Popen
+import os
+
+def test_tx_bcn(ifindex, monif):
+
+    mac = mac_address(ifindex)
+    mac = ':'.join('%02x' % ord(x) for x in mac)
+    MESHID="foo"
+
+# start capture, would be nice to use the pypcap library, but apparently it
+# can't passively write to a capture file in the background. Spawn a tcpdump
+# session instead. Oh well.
+    p = Popen("tcpdump -i%s -w%s &" % (monif, CAP_FILE), shell=True)
+    p.pid += 1 # child, god help me
+    time.sleep(3)
+
+# tx frame type
+    pkt = get_mesh_beacon(mac, MESHID)
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+
+    time.sleep(1)
+    os.kill(p.pid, 15)
+
+# read frame
+    pkts = rdpcap(CAP_FILE)
+    found = False
+    for p in pkts:
+        if matches_beacon(pkt, p):
+            found = True
+            break
+
+    if found:
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 import getopt, sys
 
@@ -330,6 +389,11 @@ if __name__ == "__main__":
         send_data(ifindex, testargs)
     elif test == "send_all":
         send_all(ifindex)
+<<<<<<< HEAD
     elif test in dir(__main__):
         fn = getattr(__main__, test)
         fn(ifindex, **testargs)
+=======
+    elif test == "test_tx_bcn":
+        test_tx_bcn(ifindex, testargs)
+>>>>>>> add testmode beacon tx test

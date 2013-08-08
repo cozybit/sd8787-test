@@ -389,11 +389,8 @@ if __name__ == "__main__":
         send_data(ifindex, testargs)
     elif test == "send_all":
         send_all(ifindex)
-<<<<<<< HEAD
     elif test in dir(__main__):
         fn = getattr(__main__, test)
         fn(ifindex, **testargs)
-=======
     elif test == "test_tx_bcn":
         test_tx_bcn(ifindex, testargs)
->>>>>>> add testmode beacon tx test

@@ -179,7 +179,7 @@ def send_data(ifindex, data=None):
 def fw_send_frame(ifindex, frame):
 
     # frame must be 4-byte aligned
-    pad = len(frame) % 4
+    pad = 4 - len(frame) % 4
     for n in range(pad):
         frame = struct.pack("x") + frame
 

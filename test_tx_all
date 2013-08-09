@@ -11,4 +11,11 @@ set_monitor $IFACE
 fw_set_ch $IFACE $CH
 set_channel $MON_IFACE $CH
 
-testmode $IFACE test_tx_bcn $MON_IFACE
+start_capture $MON_IFACE $CAP_FILE &
+sleep 2
+cap_pid=$!
+
+testmode $IFACE send_all $MON_IFACE
+
+sleep 2
+kill $cap_pid

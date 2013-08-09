@@ -165,7 +165,7 @@ def set_monitor(ifindex, on=False, action=CMD_ACT_SET):
         ])
     ])
 
-def send_data(ifindex, data=None):
+def send_data_multicast(ifindex, data=None):
     if not data:
         print "please specify a payload"
         raise
@@ -175,7 +175,18 @@ def send_data(ifindex, data=None):
     mac = ':'.join('%02x' % ord(x) for x in mac)
 
     frame = get_mesh_mcast_data(mac, "ff:ff:ff:ff:ff:ff", data)
+    fw_send_frame(ifindex, str(frame))
 
+def send_data_unicast(ifindex, data=None):
+    if not data:
+        print "please specify a payload"
+        raise
+
+# just ask the fw for mac address :)
+    mac = mac_address(ifindex)
+    mac = ':'.join('%02x' % ord(x) for x in mac)
+
+    frame = get_mesh_4addr_data(mac, "00:11:22:33:44:55", data)
     fw_send_frame(ifindex, str(frame))
 
 def fw_send_frame(ifindex, frame):
@@ -212,6 +223,7 @@ def fw_send_frame(ifindex, frame):
 def send_all(ifindex):
     MESHID="bazooka"
     PAYLOAD="hello"
+    dstmac="00:11:22:33:44:55"
 
     mymac = mac_address(ifindex)
     mymac = ':'.join('%02x' % ord(x) for x in mymac)
@@ -385,8 +397,10 @@ if __name__ == "__main__":
     # RXon, mcast, bcast, promisc, allmulti, 802.11, mgmt
     #PROMISC=0b0101000111100001
         set_mac_ctl(ifindex, int(testargs, 16))
-    elif test == "send_data":
-        send_data(ifindex, testargs)
+    elif test == "send_data_unicast":
+        send_data_unicast(ifindex, testargs)
+    elif test == "send_data_multicast":
+        send_data_multicast(ifindex, testargs)
     elif test == "send_all":
         send_all(ifindex)
     elif test == "test_tx_bcn":

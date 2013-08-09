@@ -67,12 +67,6 @@ fw_set_ch() {
 	testmode $iface set_channel $ch
 }
 
-fw_tx_data() {
-	local iface=$1
-	local data=$2
-	testmode $iface send_data $data
-}
-
 if2mac () {
 	sudo iw dev | grep $1 -A3 | grep addr | awk '{print $2}'
 }

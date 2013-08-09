@@ -1,0 +1,35 @@
+#!/bin/bash
+source `dirname $0`/common.sh
+
+CH=6
+CAP_FILE=out.cap
+PAYLOAD="this is a unicast frame"
+
+if [ "$1" != "repeat" ]
+then
+	reload_card
+
+	# must be in monitor for injection
+	set_monitor $IFACE
+	fw_set_ch $IFACE $CH
+	set_channel $MON_IFACE $CH
+fi
+
+# start capturing on MON_IFACE
+start_capture $MON_IFACE $CAP_FILE &
+sleep 2
+cap_pid=$!
+
+# pew pew
+testmode $IFACE send_data_unicast $PAYLOAD
+
+sleep 1
+sudo killall tcpdump
+# inspect capture for frame
+IFACE_ADDR=`if2mac $IFACE`
+
+FOUND=`tshark -r$CAP_FILE -R"wlan.addr == $IFACE_ADDR" | wc -l`
+[ "$FOUND" -lt 1 ] && fail "couldn't find frames from $IFACE_ADDR"
+
+FOUND=`tshark -r$CAP_FILE -R"wlan.addr == $IFACE_ADDR && data.data == \"$PAYLOAD\"" | wc -l`
+[ "$FOUND" -lt 1 ] && fail "Frames from $IFACE_ADDR have an invalid payload"

@@ -226,6 +226,8 @@ def send_all(ifindex):
 # beacon
     pkt = get_mesh_beacon(mymac, MESHID)
     fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
 
 # peering open
     pkt = get_mesh_peering_open(mymac, dstmac, MESHID)
@@ -234,9 +236,13 @@ def send_all(ifindex):
 # bcast mesh data
     pkt = get_mesh_mcast_data(mymac, "ff:ff:ff:ff:ff:ff", PAYLOAD)
     fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
 
 # PREQ
     pkt = get_mesh_preq(mymac, "0c:0c:0c:0c:0c:0c")
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
     fw_send_frame(ifindex, str(pkt))
 
 # 4addr mesh data
@@ -310,8 +316,6 @@ def test_tx_bcn(ifindex, monif):
 
 # tx frame type
     pkt = get_mesh_beacon(mac, MESHID)
-    print repr(pkt)
-    print str(pkt).encode('hex')
     fw_send_frame(ifindex, str(pkt))
     fw_send_frame(ifindex, str(pkt))
     fw_send_frame(ifindex, str(pkt))

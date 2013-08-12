@@ -28,7 +28,7 @@ def get_mesh_4addr_data(src, dst, payload):
 # RA TA DA SA
 # TXOP=1 mesh control present
     pkt = Dot11(addr1=dst, addr2=src, addr3=dst, addr4=src,
-                type="Data", subtype=0x8,FCfield="to-DS+from-DS")\
+                type="Data", subtype=0x8,FCfield="to-DS+from-DS", SC=0xeee0)\
             / Dot11QoS(TXOP=1)\
             / Dot11MeshControl(mesh_ttl=5, mesh_sequence_number=0x99)\
             / LLC(dsap=0xaa, ssap=0xaa) / SNAP(code=0x0800)
@@ -45,7 +45,7 @@ def get_mesh_mcast_data(src, dst, payload):
         raise
 
     pkt = Dot11(addr1=dst, addr2=src, addr3=src,
-                type="Data", subtype=0x88,FCfield="from-DS")\
+                type="Data", subtype=0x88,FCfield="from-DS", SC=0xbbb0)\
             / Dot11QoS(TXOP=1)\
             / Dot11MeshControl(mesh_ttl=5, mesh_sequence_number=0x99)\
             / LLC(dsap=0xaa, ssap=0xaa) / SNAP(code=0x0800)

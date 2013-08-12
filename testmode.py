@@ -191,16 +191,11 @@ def send_data_unicast(ifindex, data=None):
 
 def fw_send_frame(ifindex, frame):
 
-    # frame must be 4-byte aligned
-    pad = 4 - len(frame) % 4
-    for n in range(pad):
-        frame = struct.pack("x") + frame
-
     # 8787 tx descriptor
     BSS_TYPE = 0x3 # TYPE_TM
     BSS_NUM = 0
     LEN = len(frame)
-    OFFSET = 16 + pad # 18 == desc. length must start on 4-byte boundary
+    OFFSET = 16
     TYPE = 0x5 # 802.11
     RES1 = 0
     PRIORITY = 0
@@ -304,7 +299,7 @@ def test_tx_bcn(ifindex, monif):
 
     mac = mac_address(ifindex)
     mac = ':'.join('%02x' % ord(x) for x in mac)
-    MESHID="foo"
+    MESHID="foolfool"
 
 # start capture, would be nice to use the pypcap library, but apparently it
 # can't passively write to a capture file in the background. Spawn a tcpdump
@@ -315,9 +310,33 @@ def test_tx_bcn(ifindex, monif):
 
 # tx frame type
     pkt = get_mesh_beacon(mac, MESHID)
+    print repr(pkt)
+    print str(pkt).encode('hex')
     fw_send_frame(ifindex, str(pkt))
     fw_send_frame(ifindex, str(pkt))
     fw_send_frame(ifindex, str(pkt))
+    MESHID="foolfoo"
+    pkt = get_mesh_beacon(mac, MESHID)
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    MESHID="foolfo"
+    pkt = get_mesh_beacon(mac, MESHID)
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    MESHID="foolf"
+    pkt = get_mesh_beacon(mac, MESHID)
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    MESHID="fool"
+    pkt = get_mesh_beacon(mac, MESHID)
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    MESHID="foo"
+    pkt = get_mesh_beacon(mac, MESHID)
     fw_send_frame(ifindex, str(pkt))
     fw_send_frame(ifindex, str(pkt))
     fw_send_frame(ifindex, str(pkt))

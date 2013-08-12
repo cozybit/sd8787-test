@@ -3,7 +3,7 @@ source `dirname $0`/common.sh
 
 CH=6
 CAP_FILE=out.cap
-PAYLOAD="this is a unicast frame"
+PAYLOAD="01234567890123456789"
 
 if [ "$1" != "repeat" ]
 then

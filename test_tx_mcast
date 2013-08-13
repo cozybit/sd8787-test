@@ -5,15 +5,12 @@ CH=6
 CAP_FILE=out.cap
 PAYLOAD="01234567890123456789"
 
-if [ "$1" != "repeat" ]
-then
-	reload_card
+[ "$1" != "noreload" ] && reload_card
 
-	# must be in monitor for injection
-	set_monitor $IFACE
-	fw_set_ch $IFACE $CH
-	set_channel $MON_IFACE $CH
-fi
+# must be in monitor for injection
+set_monitor $IFACE
+fw_set_ch $IFACE $CH
+set_channel $MON_IFACE $CH
 
 # start capturing on MON_IFACE
 start_capture $MON_IFACE $CAP_FILE &
@@ -38,3 +35,4 @@ FOUND=`tshark -r$CAP_FILE -R"wlan.addr == $IFACE_ADDR" | wc -l`
 # Our test frames are UDP with udp port 0x123.  Look for that.
 FOUND=`tshark -r$CAP_FILE -R"wlan.addr == $IFACE_ADDR && udp.port == 0x123" | wc -l`
 [ "$FOUND" -lt 1 ] && fail "Frames from $IFACE_ADDR have an invalid payload"
+exit 0

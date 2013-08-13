@@ -6,9 +6,9 @@ source `dirname $0`/common.sh
 KNOWN_SSID=cozybit
 KNOWN_CH=11
 
-reload_card
+[ "$1" != "noreload" ] && reload_card
 
 set_monitor $IFACE
 link_up $IFACE
 fw_set_ch $IFACE $KNOWN_CH
-timeout 3 sudo tcpdump -i$IFACE | grep $KNOWN_SSID || fail "SSID not found, must be wrong channel!"
+timeout 3 sudo tcpdump -i$IFACE 2> /dev/null | grep $KNOWN_SSID &> /dev/null || fail "SSID not found, must be wrong channel!"

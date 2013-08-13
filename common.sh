@@ -42,7 +42,7 @@ set_mesh() {
 start_capture() {
 	local iface=$1
 	local file=$2
-	sudo tcpdump -i$iface -w$file
+	sudo tcpdump -i$iface -w$file &>/dev/null
 }
 
 set_channel() {

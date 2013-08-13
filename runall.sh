@@ -2,17 +2,18 @@
 
 mkdir -p logs
 
-tests="2-1-test_drv_load test_mon test_set_channel test_tx_unicast test_tx_multicast"
+tests="2-1-test_drv_load test_mon test_set_channel test_tx_unicast test_tx_mcast test_tx_bcn"
 
 for test in $tests; do
-	echo running $test
 
-	./$test | tee logs/${test}_log
+	[ "${test}" = "test_mon" ] && ARG="noreload"
+
+	./$test ${ARG} | tee logs/${test}_log
 
 	echo -n $test:
 	if [ $? == 0 ]; then
-		echo PASS
+		echo -e "\e[00;32mPASS\e[00m"
 	else
-		echo FAIL
+		echo -e "\e[00;31mFAIL\e[00m"
 	fi
 done

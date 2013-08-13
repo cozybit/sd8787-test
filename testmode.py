@@ -307,10 +307,12 @@ def test_tx_bcn(ifindex, monif):
     mac = ':'.join('%02x' % ord(x) for x in mac)
     MESHID="foolfool"
 
+    devnull = open(os.devnull,"w")
+
 # start capture, would be nice to use the pypcap library, but apparently it
 # can't passively write to a capture file in the background. Spawn a tcpdump
 # session instead. Oh well.
-    p = Popen("tcpdump -i%s -w%s &" % (monif, CAP_FILE), shell=True)
+    p = Popen("tcpdump -i%s -w%s" % (monif, CAP_FILE), shell=True, stderr=devnull)
     p.pid += 1 # child, god help me
     time.sleep(3)
 
@@ -394,10 +396,6 @@ if __name__ == "__main__":
     ifindex = if_nametoindex(iface)
     hdr, attrs = send_cmd(NL80211_CMD_GET_WIPHY,
                  [netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex)])
-
-    print 'ifindex: %d' % ifindex
-    print 'wiphy: %s' % attrs[NL80211_ATTR_WIPHY].u32()
-    print 'wiphy name: %s' % attrs[NL80211_ATTR_WIPHY_NAME].str()
 
     import __main__
 

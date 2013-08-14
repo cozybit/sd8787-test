@@ -189,6 +189,22 @@ def send_data_unicast(ifindex, data=None):
     frame = get_mesh_4addr_data(mac, "00:11:22:33:44:55", data)
     fw_send_frame(ifindex, str(frame))
 
+def send_to_many_peers (ifindex, data=None):
+    if not data:
+        print "please specify a payload"
+        raise
+
+# just ask the fw for mac address :)
+    mac = mac_address(ifindex)
+    mac = ':'.join('%02x' % ord(x) for x in mac)
+
+    MAX_PEERS=16
+    for i in range(4*MAX_PEERS):
+        i = i % 2*MAX_PEERS
+        dst = "90:f6:52:76:4e:%02x" % i
+        frame = get_mesh_4addr_data(mac, dst, data)
+        fw_send_frame(ifindex, str(frame))
+
 def fw_send_frame(ifindex, frame):
 
     # 8787 tx descriptor
@@ -420,6 +436,8 @@ if __name__ == "__main__":
         set_mac_ctl(ifindex, int(testargs, 16))
     elif test == "send_data_unicast":
         send_data_unicast(ifindex, testargs)
+    elif test == "send_to_many_peers":
+        send_to_many_peers(ifindex, testargs)
     elif test == "send_data_multicast":
         send_data_multicast(ifindex, testargs)
     elif test == "send_all":

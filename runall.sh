@@ -10,10 +10,9 @@ for test in $tests; do
 
 	./$test ${ARG} | tee logs/${test}_log
 
-	echo -n $test:
 	if [ $? == 0 ]; then
-		echo -e "\e[00;32mPASS\e[00m"
+		printf "%-40s\e[00;32mPASS\e[00m\n" $test
 	else
-		echo -e "\e[00;31mFAIL\e[00m"
+		printf "%-40s\e[00;31mFAIL\e[00m\n" $test
 	fi
 done

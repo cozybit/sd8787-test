@@ -3,6 +3,7 @@ import struct
 import ctypes
 import ctypes.util
 import genetlink, netlink
+import time
 from dot11frames import *
 
 CAP_FILE = "/tmp/test_cap.cap"
@@ -200,10 +201,19 @@ def send_to_many_peers (ifindex, data=None):
 
     MAX_PEERS=16
     for i in range(4*MAX_PEERS):
-        i = i % 2*MAX_PEERS
+        i = i % (2*MAX_PEERS)
         dst = "90:f6:52:76:4e:%02x" % i
         frame = get_mesh_4addr_data(mac, dst, data)
-        fw_send_frame(ifindex, str(frame))
+        try:
+            fw_send_frame(ifindex, str(frame))
+        except OSError as e:
+            if (e.errno == 1):
+                # We get this when we try to send data too fast.
+                # take a break
+                time.sleep(0.5)
+                fw_send_frame(ifindex, str(frame))
+            else:
+                raise
 
 def fw_send_frame(ifindex, frame):
 

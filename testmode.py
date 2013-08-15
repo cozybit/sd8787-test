@@ -4,6 +4,7 @@ import ctypes
 import ctypes.util
 import genetlink, netlink
 import time
+from utils import hexdump
 from dot11frames import *
 
 CAP_FILE = "/tmp/test_cap.cap"
@@ -29,8 +30,10 @@ MWL8787_CMD_802_11_MAC_ADDRESS  = 0x004d
 MWL8787_CMD_802_11_RF_CHANNEL   = 0x001d
 MWL8787_CMD_802_11_MAC_CONTROL  = 0x0028
 MWL8787_CMD_802_11_RADIO_CONTROL = 0x001c
-MWL8787_CMD_802_11_CMD_MONITOR = 0x0102
+MWL8787_CMD_802_11_SUBSCRIBE_EVENT    = 0x0075
+MWL8787_CMD_802_11_CMD_MONITOR   = 0x0102
 MWL8787_CMD_BEACON_SET           = 0x00cb
+MWL8787_CMD_802_11_HEART_BEAT    = 0x00da
 MWL8787_CMD_BEACON_CTRL          = 0x010e
 
 CMD_ACT_GET                     = 0
@@ -43,6 +46,12 @@ def if_nametoindex(ifname):
     return libc.if_nametoindex(ifname)
 
 def send_cmd(cmd, attrs, resp=True):
+    """
+    Send a testmode command and read the response.
+
+    If the command returns a response (the usual case), the socket
+    is read until the matching netlink response is sent back.
+    """
     conn = genetlink.connection
     nlmsg = genetlink.GeNlMessage(family, cmd,
         flags=netlink.NLM_F_REQUEST | netlink.NLM_F_ACK,
@@ -56,6 +65,69 @@ def send_cmd(cmd, attrs, resp=True):
                 attrs = netlink.parse_attributes(m.payload[4:])
                 return (hdr.cmd, attrs)
     return None
+
+def next_event():
+    """
+    Read the next message from the netlink connection.
+
+    Use this when an event is expected; it will block until any
+    event is ready and return the first one.  Some events require
+    subscription via a specific command, while others just arrive
+    based on received frames etc.
+    """
+    conn = genetlink.connection
+    m = conn.recv()
+    hdr = genetlink.genl_hdr_parse(m.payload[:4])
+    attrs = netlink.parse_attributes(m.payload[4:])
+    return (hdr.cmd, attrs)
+
+def event_monitor(ifindex):
+    """
+    Dump all events as they occur.  For debugging -- never returns!
+    """
+    while True:
+        hdr, attrs = next_event()
+        if NL80211_ATTR_TESTDATA not in attrs:
+            continue
+
+        print 'attrs: %s' % attrs
+        testdata = attrs[NL80211_ATTR_TESTDATA].nested()
+        hexdump(testdata, prefix='event ')
+
+def heartbeat(ifindex, d2h_timer=0):
+    """
+    Set heartbeat to get periodic events from device
+
+    XXX not supported with current firmware
+    """
+    h2d_timer = 0               # disabled
+    d2h_timer = int(d2h_timer)
+
+    payload = struct.pack("<HHH", CMD_ACT_SET, h2d_timer, d2h_timer)
+    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
+        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
+        netlink.Nested(NL80211_ATTR_TESTDATA, [
+            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
+            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_HEART_BEAT),
+            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
+        ])
+    ])
+
+def subscribe_event(ifindex, event_mask):
+    """
+    Subscribe to a set of events.
+    """
+    event_mask = int(event_mask, base=0)
+    payload = struct.pack("<HH", CMD_ACT_SET, event_mask)
+    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
+        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
+        netlink.Nested(NL80211_ATTR_TESTDATA, [
+            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
+            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_SUBSCRIBE_EVENT),
+            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
+        ])
+    ])
+
 
 def reset(ifindex):
     """ send a reset """
@@ -425,7 +497,9 @@ if __name__ == "__main__":
 
     import __main__
 
-    testargs = arglist[0]
+    if len(arglist):
+        testargs = arglist[0]
+
     if test == "reset":
         reset(ifindex)
     elif test == "set_radio":
@@ -456,4 +530,4 @@ if __name__ == "__main__":
         test_tx_bcn(ifindex, testargs)
     elif test in dir(__main__):
         fn = getattr(__main__, test)
-        fn(ifindex, **testargs)
+        fn(ifindex, *arglist)

@@ -94,6 +94,20 @@ def event_monitor(ifindex):
         testdata = attrs[NL80211_ATTR_TESTDATA].nested()
         hexdump(testdata, prefix='event ')
 
+
+def do_cmd(cmd_id, payload_tmpl, *payload_args):
+
+    payload = struct.pack(payload_tmpl, *payload_args)
+    return send_cmd(NL80211_CMD_TESTMODE, [
+        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
+        netlink.Nested(NL80211_ATTR_TESTDATA, [
+            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
+            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, cmd_id),
+            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
+        ])
+    ])
+
+
 def heartbeat(ifindex, d2h_timer=0):
     """
     Set heartbeat to get periodic events from device
@@ -103,42 +117,19 @@ def heartbeat(ifindex, d2h_timer=0):
     h2d_timer = 0               # disabled
     d2h_timer = int(d2h_timer)
 
-    payload = struct.pack("<HHH", CMD_ACT_SET, h2d_timer, d2h_timer)
-    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
-        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
-        netlink.Nested(NL80211_ATTR_TESTDATA, [
-            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
-            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_HEART_BEAT),
-            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
-        ])
-    ])
+    do_cmd(MWL8787_CMD_802_11_HEART_BEAT, "<HHH", CMD_ACT_SET, h2d_timer, d2h_timer)
 
 def subscribe_event(ifindex, event_mask):
     """
     Subscribe to a set of events.
     """
     event_mask = int(event_mask, base=0)
-    payload = struct.pack("<HH", CMD_ACT_SET, event_mask)
-    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
-        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
-        netlink.Nested(NL80211_ATTR_TESTDATA, [
-            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
-            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_SUBSCRIBE_EVENT),
-            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
-        ])
-    ])
+    do_cmd(MWL8787_CMD_802_11_SUBSCRIBE_EVENT, "<HH", CMD_ACT_SET, event_mask)
 
 
 def reset(ifindex):
     """ send a reset """
-    send_cmd(NL80211_CMD_TESTMODE, [
-        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
-        netlink.Nested(NL80211_ATTR_TESTDATA, [
-            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
-            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_RESET),
-            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, '')
-        ])
-    ], resp=False)
+    do_cmd(MWL8787_CMD_802_11_RESET, "")
 
 def mac_address(ifindex, address=None):
     """ set/get mac address """
@@ -147,16 +138,9 @@ def mac_address(ifindex, address=None):
         action = CMD_ACT_GET
     else:
         action = CMD_ACT_SET
-    payload = struct.pack("<H6B", action, *address)
 
-    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
-        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
-        netlink.Nested(NL80211_ATTR_TESTDATA, [
-            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
-            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_MAC_ADDRESS),
-            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
-        ])
-    ])
+    hdr, attrs = do_cmd(MWL8787_CMD_802_11_MAC_ADDRESS, "<H6B",
+                        action, *address)
 
     testdata = attrs[NL80211_ATTR_TESTDATA].nested()
     action, address = struct.unpack("<H6s",
@@ -172,31 +156,16 @@ def set_channel(ifindex, channel=None):
     else:
         action = CMD_ACT_SET
     BANDCHAN = 0 # 2.4 ghz, 20mhz, manual
-    payload = struct.pack("<HH2B", action, channel, 0, BANDCHAN)
 
-    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
-        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
-        netlink.Nested(NL80211_ATTR_TESTDATA, [
-            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
-            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_RF_CHANNEL),
-            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
-        ])
-    ])
+    do_cmd(MWL8787_CMD_802_11_RF_CHANNEL, "<HH2B", action, channel,
+           0, BANDCHAN)
 
 def set_mac_ctl(ifindex, mask=None):
     """ set/get mac_ctl (filter) """
     if not mask:
         mask = 0
-    payload = struct.pack("<H", mask)
 
-    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
-        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
-        netlink.Nested(NL80211_ATTR_TESTDATA, [
-            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
-            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_MAC_CONTROL),
-            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
-        ])
-    ])
+    do_cmd(MWL8787_CMD_802_11_MAC_CONTROL, "<H", mask)
 
 def radio_control(ifindex, on=False, action=CMD_ACT_SET):
     """ set/get radio on/off """
@@ -206,16 +175,7 @@ def radio_control(ifindex, on=False, action=CMD_ACT_SET):
         control = 1
 
     # non-zero is on
-    payload = struct.pack("<HH", action, control)
-
-    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
-        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
-        netlink.Nested(NL80211_ATTR_TESTDATA, [
-            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
-            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_RADIO_CONTROL),
-            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
-        ])
-    ])
+    do_cmd(MWL8787_CMD_802_11_RADIO_CONTROL, "<HH", action, control)
 
 def set_monitor(ifindex, on=False, action=CMD_ACT_SET):
     """ set/get monitor mode """
@@ -227,16 +187,8 @@ def set_monitor(ifindex, on=False, action=CMD_ACT_SET):
     MONITOR_MODE_ALL = 7
     TYPE = 0x012A
     LEN = 2
-    payload = struct.pack("<HHHHH2B", action, enable, MONITOR_MODE_ALL, TYPE, LEN, 0, 1)
-
-    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
-        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
-        netlink.Nested(NL80211_ATTR_TESTDATA, [
-            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
-            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_CMD_MONITOR),
-            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
-        ])
-    ])
+    do_cmd(MWL8787_CMD_802_11_CMD_MONITOR, "<HHHHH2B", action, enable,
+           MONITOR_MODE_ALL, TYPE, LEN, 0, 1)
 
 def send_data_multicast(ifindex, data=None):
     if not data:
@@ -354,27 +306,10 @@ def fw_set_beacon(ifindex, meshid, intval):
     frame = get_mesh_beacon(mymac, meshid)
 
     # set beacon data
-    hdr = struct.pack("<H", len(frame))
-    payload = hdr + frame
-    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
-        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
-        netlink.Nested(NL80211_ATTR_TESTDATA, [
-            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
-            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_BEACON_SET),
-            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
-        ])
-    ])
+    do_cmd(MWL8787_CMD_BEACON_SET, "<H%ds" % len(frame), len(frame), frame)
 
     # enable beaconing at the given interval
-    payload = struct.pack("<HHH", CMD_ACT_SET, 1, intval)
-    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
-        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
-        netlink.Nested(NL80211_ATTR_TESTDATA, [
-            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
-            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_BEACON_CTRL),
-            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
-        ])
-    ])
+    do_cmd(MWL8787_CMD_BEACON_CTRL, "<HHH", CMD_ACT_SET, 1, intval)
 
 
 def matches_beacon(tx, rx):

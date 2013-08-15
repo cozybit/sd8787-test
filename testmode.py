@@ -199,9 +199,9 @@ def send_to_many_peers (ifindex, data=None):
     mac = mac_address(ifindex)
     mac = ':'.join('%02x' % ord(x) for x in mac)
 
-    MAX_PEERS=16
-    for i in range(4*MAX_PEERS):
-        i = i % (2*MAX_PEERS)
+    HIGHEST_ADDR=32
+    for i in range(4*HIGHEST_ADDR):
+        i = i % HIGHEST_ADDR
         dst = "90:f6:52:76:4e:%02x" % i
         frame = get_mesh_4addr_data(mac, dst, data)
         try:

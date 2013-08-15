@@ -262,7 +262,7 @@ def send_data_unicast(ifindex, data=None):
     frame = get_mesh_4addr_data(mac, "00:11:22:33:44:55", data)
     fw_send_frame(ifindex, str(frame))
 
-def send_to_many_peers (ifindex, data=None):
+def send_to_many_peers(ifindex, data, base_address, address_range):
     if not data:
         print "please specify a payload"
         raise
@@ -271,10 +271,9 @@ def send_to_many_peers (ifindex, data=None):
     mac = mac_address(ifindex)
     mac = ':'.join('%02x' % ord(x) for x in mac)
 
-    HIGHEST_ADDR=32
-    for i in range(4*HIGHEST_ADDR):
-        i = i % HIGHEST_ADDR
-        dst = "90:f6:52:76:4e:%02x" % i
+    for i in range(int(address_range)):
+        dst = base_address + "%02x" % i
+	print dst
         frame = get_mesh_4addr_data(mac, dst, data)
         try:
             fw_send_frame(ifindex, str(frame))
@@ -521,7 +520,8 @@ if __name__ == "__main__":
     elif test == "send_data_unicast":
         send_data_unicast(ifindex, testargs)
     elif test == "send_to_many_peers":
-        send_to_many_peers(ifindex, testargs)
+	# **arglist instead
+        send_to_many_peers(ifindex, arglist[0], arglist[1], arglist[2])
     elif test == "send_data_multicast":
         send_data_multicast(ifindex, testargs)
     elif test == "send_all":

@@ -21,7 +21,11 @@ BASE_ADDRESS="90:f6:52:76:4e:"
 ADDRESS_RANGE=32
 MIN_RATE=11
 
-# pew pew
+# iterate through all the addresses in the address range a few times 
+# to minimize the possibility of the sniffer capturing high data rate frames
+testmode $IFACE send_to_many_peers $PAYLOAD $BASE_ADDRESS $ADDRESS_RANGE
+testmode $IFACE send_to_many_peers $PAYLOAD $BASE_ADDRESS $ADDRESS_RANGE
+testmode $IFACE send_to_many_peers $PAYLOAD $BASE_ADDRESS $ADDRESS_RANGE
 testmode $IFACE send_to_many_peers $PAYLOAD $BASE_ADDRESS $ADDRESS_RANGE
 
 
@@ -39,11 +43,8 @@ FOUND=`tshark -r$CAP_FILE -R"wlan.addr == $IFACE_ADDR && udp.port == 0x123" | wc
 
 for (( i=0; i<$ADDRESS_RANGE; i++ ))
 do
-	# convert to hex, and make string lowercase
-	APPEND=`printf "%02x\n" $i`
-	DESTINATION=$BASE_ADDRESS$APPEND
-	echo "destination $DESTINATION"
-	FOUND=`tshark -r$CAP_FILE -R"radiotap.datarate >= $MIN_RATE && eth.dst == $DESTINATION" | wc -l`
+	DESTINATION=`printf "${BASE_ADDRESS}%02x\n" $i`
+	FOUND=`tshark -r$CAP_FILE -R"radiotap.datarate >= $MIN_RATE && wlan.ra == $DESTINATION" | wc -l`
 	[ "$FOUND" -lt 1 ] && fail "couldn't find frames sent to $DESTINATION with datarate of $MIN_RATE or higher"
 done
 

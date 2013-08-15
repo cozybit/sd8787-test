@@ -273,7 +273,6 @@ def send_to_many_peers(ifindex, data, base_address, address_range):
 
     for i in range(int(address_range)):
         dst = base_address + "%02x" % i
-	print dst
         frame = get_mesh_4addr_data(mac, dst, data)
         try:
             fw_send_frame(ifindex, str(frame))

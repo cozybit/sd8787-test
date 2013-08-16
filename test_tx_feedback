@@ -1,0 +1,17 @@
+#!/bin/bash
+source `dirname $0`/common.sh
+
+CH=6
+CAP_FILE=out.cap
+PAYLOAD="01234567890123456789"
+
+[ "$1" != "noreload" ] && reload_card
+
+# must be in monitor for injection
+set_monitor $IFACE
+fw_set_ch $IFACE $CH
+set_channel $MON_IFACE $CH
+
+testmode $IFACE tx_feedback $PAYLOAD
+
+exit 0

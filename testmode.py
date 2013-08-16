@@ -38,6 +38,12 @@ MWL8787_CMD_BEACON_CTRL          = 0x010e
 
 CMD_ACT_GET                     = 0
 CMD_ACT_SET                     = 1
+CMD_ACT_BITWISE_SET             = 2
+CMD_ACT_BITWISE_GET             = 3
+
+EVENT_SUBSCRIBE_DATA_TX_FEEDBACK_BITMAP = 0x1000
+
+MWL8787_EVENT_DATA_TX_FEEDBACK = 0x0067
 
 libc = ctypes.CDLL(ctypes.util.find_library('c'))
 family = genetlink.controller.get_family_id('nl80211')
@@ -123,9 +129,15 @@ def subscribe_event(ifindex, event_mask):
     """
     Subscribe to a set of events.
     """
-    event_mask = int(event_mask, base=0)
-    do_cmd(MWL8787_CMD_802_11_SUBSCRIBE_EVENT, "<HH", CMD_ACT_SET, event_mask)
-
+    payload = struct.pack("<HH", CMD_ACT_BITWISE_SET, event_mask)
+    hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
+        netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
+        netlink.Nested(NL80211_ATTR_TESTDATA, [
+            netlink.U32Attr(MWL8787_TM_ATTR_CMD_ID, MWL8787_TM_CMD_FW),
+            netlink.U32Attr(MWL8787_TM_ATTR_FW_CMD_ID, MWL8787_CMD_802_11_SUBSCRIBE_EVENT),
+            netlink.BinaryAttr(MWL8787_TM_ATTR_DATA, payload)
+        ])
+    ])
 
 def reset(ifindex):
     """ send a reset """
@@ -189,6 +201,11 @@ def set_monitor(ifindex, on=False, action=CMD_ACT_SET):
     LEN = 2
     do_cmd(MWL8787_CMD_802_11_CMD_MONITOR, "<HHHHH2B", action, enable,
            MONITOR_MODE_ALL, TYPE, LEN, 0, 1)
+
+def test_tx_feedback(ifindex):
+    subscribe_event(ifindex, EVENT_SUBSCRIBE_DATA_TX_FEEDBACK_BITMAP)
+    send_data_unicast(ifindex, "foobar")
+
 
 def send_data_multicast(ifindex, data=None):
     if not data:
@@ -458,6 +475,8 @@ if __name__ == "__main__":
         send_to_many_peers(ifindex, arglist[0], arglist[1], arglist[2])
     elif test == "send_data_multicast":
         send_data_multicast(ifindex, testargs)
+    elif test == "tx_feedback":
+        test_tx_feedback(ifindex)
     elif test == "send_all":
         send_all(ifindex)
     elif test == "test_tx_bcn":

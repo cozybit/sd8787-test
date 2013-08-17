@@ -219,12 +219,12 @@ def set_monitor(ifindex, on=False, action=CMD_ACT_SET):
     do_cmd(MWL8787_CMD_802_11_CMD_MONITOR, "<HHHHH2B", action, enable,
            MONITOR_MODE_ALL, TYPE, LEN, 0, 1)
 
-def test_tx_feedback(ifindex):
+def tx_feedback(ifindex, payload):
     subscribe_event(ifindex, EVENT_SUBSCRIBE_DATA_TX_FEEDBACK_BITMAP)
     q = Queue()
     p = Process(target=event_trap, args=(ifindex, q))
     p.start()
-    send_data_unicast(ifindex, "12")
+    send_data_unicast(ifindex, payload)
     try:
         event_id, event_data = q.get(block = True, timeout = 5)
     except Empty:
@@ -486,8 +486,6 @@ if __name__ == "__main__":
         set_monitor(ifindex, True if testargs == "on" else False)
     elif test == "set_mac_ctl":
         set_mac_ctl(ifindex, testargs)
-    elif test == "tx_feedback":
-        test_tx_feedback(ifindex)
     elif test in dir(__main__):
         fn = getattr(__main__, test)
         fn(ifindex, *arglist)

@@ -489,3 +489,5 @@ if __name__ == "__main__":
     elif test in dir(__main__):
         fn = getattr(__main__, test)
         fn(ifindex, *arglist)
+    else:
+        raise ValueError, 'Unknown test: %s' % test

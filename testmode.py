@@ -454,9 +454,7 @@ if __name__ == "__main__":
     if len(arglist):
         testargs = arglist[0]
 
-    if test == "reset":
-        reset(ifindex)
-    elif test == "set_radio":
+    if test == "set_radio":
         radio_control(ifindex, True if testargs == "on" else False)
     elif test == "set_mac":
         testargs = [int(x) for x in testargs.split(":")]

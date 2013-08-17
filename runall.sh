@@ -2,7 +2,7 @@
 
 mkdir -p logs
 
-tests="2-1-test_drv_load test_mon test_set_channel test_tx_unicast test_tx_mcast test_tx_bcn test_many_peers test_tx_feedback"
+tests="2-1-test_drv_load test_mon test_set_channel test_tx_feedback test_tx_unicast test_tx_mcast test_tx_bcn test_many_peers"
 
 for test in $tests; do
 

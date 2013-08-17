@@ -13,6 +13,3 @@ fw_set_ch $IFACE $CH
 set_channel $MON_IFACE $CH
 
 testmode $IFACE tx_feedback $PAYLOAD
-
-fail "Here we should check somehow that the driver got a tx feedback event but we don't"
-exit 0

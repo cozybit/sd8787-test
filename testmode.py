@@ -4,6 +4,8 @@ import ctypes
 import ctypes.util
 import genetlink, netlink
 import time
+from multiprocessing import Process, Queue
+from Queue import Empty
 from utils import hexdump
 from dot11frames import *
 
@@ -88,9 +90,23 @@ def next_event():
     attrs = netlink.parse_attributes(m.payload[4:])
     return (hdr.cmd, attrs)
 
-def event_monitor(ifindex):
+def event_trap(ifindex, queue=None):
     """
-    Dump all events as they occur.  For debugging -- never returns!
+    Wait for one event, and send it up the queue.
+    """
+    cmd, attrs = next_event()
+    if NL80211_ATTR_TESTDATA not in attrs:
+       return
+
+    testdata = attrs[NL80211_ATTR_TESTDATA].nested()
+    event_id = struct.unpack("<L", testdata[MWL8787_TM_ATTR_FW_EVT_ID].data)
+    data = struct.unpack("<L", testdata[MWL8787_TM_ATTR_DATA].data)
+    if queue:
+        queue.put([event_id[0], data[0]])
+
+def event_monitor(ifindex, queue=None):
+    """
+    Dump all events as they occur.  For debugging -- never exists
     """
     while True:
         cmd, attrs = next_event()
@@ -99,9 +115,8 @@ def event_monitor(ifindex):
 
         testdata = attrs[NL80211_ATTR_TESTDATA].nested()
         event_id = struct.unpack("<L", testdata[MWL8787_TM_ATTR_FW_EVT_ID].data)
-        print hex(event_id[0])
         data = struct.unpack("<L", testdata[MWL8787_TM_ATTR_DATA].data)
-        print hex(data[0])
+        print hex(event_id[0]), hex(data[0])
 
 def do_cmd(cmd_id, payload_tmpl, *payload_args):
     payload = struct.pack(payload_tmpl, *payload_args)
@@ -205,8 +220,20 @@ def set_monitor(ifindex, on=False, action=CMD_ACT_SET):
 
 def test_tx_feedback(ifindex):
     subscribe_event(ifindex, EVENT_SUBSCRIBE_DATA_TX_FEEDBACK_BITMAP)
-    send_data_unicast(ifindex, "foobar")
-
+    q = Queue()
+    p = Process(target=event_trap, args=(ifindex, q))
+    p.start()
+    send_data_unicast(ifindex, "12")
+    try:
+        event_id, event_data = q.get(block = True, timeout = 5)
+    except Empty:
+        sys.exit(1)
+    if event_id != MWL8787_EVENT_DATA_TX_FEEDBACK:
+        sys.exit(1)
+    if (event_data >> 24 != 0xbc):    # magic tx_feedback's first byte
+        sys.exit(1)
+    p.join()
+    sys.exit(0)
 
 def send_data_multicast(ifindex, data=None):
     if not data:

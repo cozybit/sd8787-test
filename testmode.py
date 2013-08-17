@@ -104,7 +104,7 @@ def event_trap(ifindex, queue=None):
     if queue:
         queue.put([event_id[0], data[0]])
 
-def event_monitor(ifindex, queue=None):
+def event_monitor(ifindex):
     """
     Dump all events as they occur.  For debugging -- never exists
     """
@@ -509,8 +509,6 @@ if __name__ == "__main__":
         send_all(ifindex)
     elif test == "test_tx_bcn":
         test_tx_bcn(ifindex, testargs)
-    elif test == "event_monitor":
-        event_monitor(ifindex)
     elif test in dir(__main__):
         fn = getattr(__main__, test)
         fn(ifindex, *arglist)

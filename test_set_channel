@@ -3,8 +3,8 @@ source `dirname $0`/common.sh
 
 # test we can successfully change the wifi channel by observing a beacon from a
 # known AP
-KNOWN_SSID=cozybit
-KNOWN_CH=11
+KNOWN_SSID=${KNOWN_SSID:-cozybit}
+KNOWN_CH=${KNOWN_CH:-11}
 
 [ "$1" != "noreload" ] && reload_card
 

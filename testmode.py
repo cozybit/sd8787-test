@@ -203,19 +203,6 @@ def radio_control(ifindex, on=False, action=CMD_ACT_SET):
     # non-zero is on
     do_cmd(MWL8787_CMD_802_11_RADIO_CONTROL, "<HH", action, control)
 
-def set_monitor(ifindex, on=False, action=CMD_ACT_SET):
-    """ set/get monitor mode """
-    if not on:
-        enable = 0
-    else:
-        enable = 1
-
-    MONITOR_MODE_ALL = 7
-    TYPE = 0x012A
-    LEN = 2
-    do_cmd(MWL8787_CMD_802_11_CMD_MONITOR, "<HHHHH2B", action, enable,
-           MONITOR_MODE_ALL, TYPE, LEN, 0, 1)
-
 def tx_feedback(ifindex, payload):
     subscribe_event(ifindex, EVENT_SUBSCRIBE_DATA_TX_FEEDBACK_BITMAP)
     q = Queue()
@@ -477,8 +464,6 @@ if __name__ == "__main__":
     elif test == "get_mac":
         address = mac_address(ifindex)
         print 'mac addr: %s' % (address)
-    elif test == "set_monitor":
-        set_monitor(ifindex, True if testargs == "on" else False)
     elif test == "set_mac_ctl":
         set_mac_ctl(ifindex, testargs)
     elif test in dir(__main__):

@@ -488,17 +488,8 @@ if __name__ == "__main__":
     # RXon, mcast, bcast, promisc, allmulti, 802.11, mgmt
     #PROMISC=0b0101000111100001
         set_mac_ctl(ifindex, int(testargs, 16))
-    elif test == "send_data_unicast":
-        send_data_unicast(ifindex, testargs)
-    elif test == "send_to_many_peers":
-	# **arglist instead
-        send_to_many_peers(ifindex, arglist[0], arglist[1], arglist[2])
-    elif test == "send_data_multicast":
-        send_data_multicast(ifindex, testargs)
     elif test == "tx_feedback":
         test_tx_feedback(ifindex)
-    elif test == "send_all":
-        send_all(ifindex)
     elif test in dir(__main__):
         fn = getattr(__main__, test)
         fn(ifindex, *arglist)

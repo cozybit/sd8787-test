@@ -5,7 +5,7 @@ reload_card
 
 mac=`if2mac $IFACE`
 
-if [[ $mac != '00:19:88'* ]]; then
+if [[ $mac != '00:19:88'* && $mac != '00:50:43'* ]]; then
     fail
 fi
 

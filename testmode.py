@@ -20,6 +20,7 @@ NL80211_ATTR_TESTDATA           = 69
 MWL8787_TM_ATTR_CMD_ID          = 1
 MWL8787_TM_ATTR_FW_CMD_ID       = 2
 MWL8787_TM_ATTR_DATA            = 3
+MWL8787_TM_ATTR_FW_EVT_ID       = 4
 
 MWL8787_TM_CMD_FW               = 1
 MWL8787_TM_CMD_DATA             = 2
@@ -81,7 +82,7 @@ def next_event():
     subscription via a specific command, while others just arrive
     based on received frames etc.
     """
-    conn = genetlink.connection
+    conn = genetlink.mcast_connection
     m = conn.recv()
     hdr = genetlink.genl_hdr_parse(m.payload[:4])
     attrs = netlink.parse_attributes(m.payload[4:])
@@ -92,17 +93,17 @@ def event_monitor(ifindex):
     Dump all events as they occur.  For debugging -- never returns!
     """
     while True:
-        hdr, attrs = next_event()
+        cmd, attrs = next_event()
         if NL80211_ATTR_TESTDATA not in attrs:
             continue
 
-        print 'attrs: %s' % attrs
         testdata = attrs[NL80211_ATTR_TESTDATA].nested()
-        hexdump(testdata, prefix='event ')
-
+        event_id = struct.unpack("<L", testdata[MWL8787_TM_ATTR_FW_EVT_ID].data)
+        print hex(event_id[0])
+        data = struct.unpack("<L", testdata[MWL8787_TM_ATTR_DATA].data)
+        print hex(data[0])
 
 def do_cmd(cmd_id, payload_tmpl, *payload_args):
-
     payload = struct.pack(payload_tmpl, *payload_args)
     return send_cmd(NL80211_CMD_TESTMODE, [
         netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
@@ -481,6 +482,8 @@ if __name__ == "__main__":
         send_all(ifindex)
     elif test == "test_tx_bcn":
         test_tx_bcn(ifindex, testargs)
+    elif test == "event_monitor":
+        event_monitor(ifindex)
     elif test in dir(__main__):
         fn = getattr(__main__, test)
         fn(ifindex, *arglist)

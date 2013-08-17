@@ -58,3 +58,9 @@ class Controller:
 
 connection = Connection(NETLINK_GENERIC)
 controller = Controller(connection)
+
+# JC: The 'testmode' multicast group id is dynamically assigned when the group
+# is registered in the kernel. I could not figure how to look it up from python
+# so I'm shooting from the hip here and subscribing to a bunch of groups (16).
+# This works for my but is horrible and may not work for you.
+mcast_connection = Connection(NETLINK_GENERIC, groups=0xff)

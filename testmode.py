@@ -173,6 +173,7 @@ def mac_address(ifindex, address=None):
     testdata = attrs[NL80211_ATTR_TESTDATA].nested()
     action, address = struct.unpack("<H6s",
         testdata[MWL8787_TM_ATTR_DATA].str())
+    address = ':'.join('%02x' % ord(x) for x in address)
     return address
 
 
@@ -240,9 +241,7 @@ def send_data_multicast(ifindex, data=None):
         print "please specify a payload"
         raise
 
-# just ask the fw for mac address :)
     mac = mac_address(ifindex)
-    mac = ':'.join('%02x' % ord(x) for x in mac)
 
     frame = get_mesh_mcast_data(mac, "ff:ff:ff:ff:ff:ff", data)
     fw_send_frame(ifindex, str(frame))
@@ -252,9 +251,7 @@ def send_data_unicast(ifindex, data=None):
         print "please specify a payload"
         raise
 
-# just ask the fw for mac address :)
     mac = mac_address(ifindex)
-    mac = ':'.join('%02x' % ord(x) for x in mac)
 
     frame = get_mesh_4addr_data(mac, "00:11:22:33:44:55", data)
     fw_send_frame(ifindex, str(frame))
@@ -264,9 +261,7 @@ def send_to_many_peers(ifindex, data, base_address, address_range):
         print "please specify a payload"
         raise
 
-# just ask the fw for mac address :)
     mac = mac_address(ifindex)
-    mac = ':'.join('%02x' % ord(x) for x in mac)
 
     for i in range(int(address_range)):
         dst = base_address + "%02x" % i
@@ -314,7 +309,6 @@ def send_all(ifindex):
     dstmac="00:11:22:33:44:55"
 
     mymac = mac_address(ifindex)
-    mymac = ':'.join('%02x' % ord(x) for x in mymac)
 
 # beacon
     pkt = get_mesh_beacon(mymac, MESHID)
@@ -346,7 +340,6 @@ def fw_set_beacon(ifindex, meshid, intval):
 
     intval = int(intval)
     mymac = mac_address(ifindex)
-    mymac = ':'.join('%02x' % ord(x) for x in mymac)
 
     frame = get_mesh_beacon(mymac, meshid)
 
@@ -380,7 +373,6 @@ import os
 def test_tx_bcn(ifindex, monif):
 
     mac = mac_address(ifindex)
-    mac = ':'.join('%02x' % ord(x) for x in mac)
     MESHID="foolfool"
 
     devnull = open(os.devnull,"w")
@@ -487,7 +479,7 @@ if __name__ == "__main__":
         mac_address(ifindex, address=testargs)
     elif test == "get_mac":
         address = mac_address(ifindex)
-        print 'mac addr: %s' % (':'.join('%02x' % ord(x) for x in address))
+        print 'mac addr: %s' % (address)
     elif test == "set_channel":
         set_channel(ifindex, int(testargs))
     elif test == "set_monitor":

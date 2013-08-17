@@ -451,19 +451,16 @@ if __name__ == "__main__":
 
     import __main__
 
-    if len(arglist):
-        testargs = arglist[0]
-
     # Resist the urge to add new things here, lest we have an
     # unmaintainable mess of an if statement.  Instead, make new
     # test functions take an ifindex and 0 or more string args.
     # They will be called by introspection where the testname
     # is the test function name.
     if test == "set_radio":
-        radio_control(ifindex, True if testargs == "on" else False)
+        radio_control(ifindex, True if arglist[0] == "on" else False)
     elif test == "set_mac":
-        testargs = [int(x) for x in testargs.split(":")]
-        mac_address(ifindex, address=testargs)
+        mac = [int(x) for x in arglist[0].split(":")]
+        mac_address(ifindex, address=mac)
     elif test == "get_mac":
         address = mac_address(ifindex)
         print 'mac addr: %s' % (address)

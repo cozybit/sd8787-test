@@ -189,11 +189,11 @@ def set_channel(ifindex, channel=None):
     do_cmd(MWL8787_CMD_802_11_RF_CHANNEL, "<HH2B", action, channel,
            0, BANDCHAN)
 
-def set_mac_ctl(ifindex, mask=None):
-    """ set/get mac_ctl (filter) """
-    if not mask:
-        mask = 0
-
+def set_mac_ctl(ifindex, mask):
+    """ set mac_ctl (filter) """
+    # RXon, mcast, bcast, promisc, allmulti, 802.11, mgmt
+    #PROMISC=0b0101000111100001
+    mask = int(mask, base=0)
     do_cmd(MWL8787_CMD_802_11_MAC_CONTROL, "<H", mask)
 
 def radio_control(ifindex, on=False, action=CMD_ACT_SET):
@@ -485,9 +485,7 @@ if __name__ == "__main__":
     elif test == "set_monitor":
         set_monitor(ifindex, True if testargs == "on" else False)
     elif test == "set_mac_ctl":
-    # RXon, mcast, bcast, promisc, allmulti, 802.11, mgmt
-    #PROMISC=0b0101000111100001
-        set_mac_ctl(ifindex, int(testargs, 16))
+        set_mac_ctl(ifindex, testargs)
     elif test == "tx_feedback":
         test_tx_feedback(ifindex)
     elif test in dir(__main__):

@@ -7,5 +7,5 @@ source `dirname $0`/common.sh
 
 set_monitor $IFACE
 link_up $IFACE
-sudo ./testmode.py -i$IFACE -t set_mac_ctrl 0xffff
+sudo ./testmode.py -i$IFACE -t set_mac_ctl 0xffff
 timeout 5 sudo tcpdump -i $IFACE -c1 &> /dev/null || fail "didn't get any frames!"

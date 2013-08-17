@@ -507,8 +507,6 @@ if __name__ == "__main__":
         test_tx_feedback(ifindex)
     elif test == "send_all":
         send_all(ifindex)
-    elif test == "test_tx_bcn":
-        test_tx_bcn(ifindex, testargs)
     elif test in dir(__main__):
         fn = getattr(__main__, test)
         fn(ifindex, *arglist)

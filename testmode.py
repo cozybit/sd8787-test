@@ -177,13 +177,10 @@ def mac_address(ifindex, address=None):
     return address
 
 
-def set_channel(ifindex, channel=None):
-    """ set/get channel """
-    if not channel:
-        channel = 0
-        action = CMD_ACT_GET
-    else:
-        action = CMD_ACT_SET
+def set_channel(ifindex, channel):
+    """ set channel """
+    channel = int(channel)
+    action = CMD_ACT_SET
     BANDCHAN = 0 # 2.4 ghz, 20mhz, manual
 
     do_cmd(MWL8787_CMD_802_11_RF_CHANNEL, "<HH2B", action, channel,
@@ -480,8 +477,6 @@ if __name__ == "__main__":
     elif test == "get_mac":
         address = mac_address(ifindex)
         print 'mac addr: %s' % (address)
-    elif test == "set_channel":
-        set_channel(ifindex, int(testargs))
     elif test == "set_monitor":
         set_monitor(ifindex, True if testargs == "on" else False)
     elif test == "set_mac_ctl":

@@ -217,6 +217,15 @@ def tx_feedback(ifindex, payload):
         sys.exit(1)
     if (event_data >> 24 != 0xbc):    # magic tx_feedback's first byte
         sys.exit(1)
+    FAIL = 0
+    if (event_data & 0xff != FAIL):   # frame sent to bogus peer, status should be FAIL
+        sys.exit(1)
+    MBPS_1 = 0
+    if ((event_data >> 8) & 0xff != MBPS_1):  # last attempted rate should be 1 Mbps
+        sys.exit(1)
+    MAX_RETRIES=0xa
+    if ((event_data >> 16) & 0xff != MAX_RETRIES):   
+        sys.exit(1)
     p.join()
     sys.exit(0)
 

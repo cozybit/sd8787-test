@@ -1,0 +1,11 @@
+#!/bin/bash
+
+source `dirname $0`/common.sh
+[ "$1" != "noreload" ] && reload_card
+
+CH=6
+
+fw_set_ch $IFACE $CH
+set_channel $MON_IFACE $CH
+
+testmode $IFACE fw_bcn $MON_IFACE

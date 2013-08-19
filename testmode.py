@@ -340,10 +340,12 @@ def fw_set_beacon(ifindex, meshid, intval):
     frame = get_mesh_beacon(mymac, meshid)
 
     # set beacon data
-    do_cmd(MWL8787_CMD_BEACON_SET, "<H%ds" % len(frame), len(frame), frame)
+    do_cmd(MWL8787_CMD_BEACON_SET, "<H" + str(len(str(frame))) + "s", len(str(frame)), str(frame))
 
     # enable beaconing at the given interval
     do_cmd(MWL8787_CMD_BEACON_CTRL, "<HHH", CMD_ACT_SET, 1, intval)
+
+    return frame
 
 
 def matches_beacon(tx, rx):
@@ -422,6 +424,37 @@ def test_tx_bcn(ifindex, monif):
             break
 
     if found:
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+def fw_bcn(ifidx, monif):
+
+    devnull = open(os.devnull,"w")
+
+# start capture, would be nice to use the pypcap library, but apparently it
+# can't passively write to a capture file in the background. Spawn a tcpdump
+# session instead. Oh well.
+    p = Popen("tcpdump -i%s -w%s" % (monif, CAP_FILE), shell=True, stderr=devnull)
+    p.pid += 1 # child, god help me
+    time.sleep(3)
+
+    frame = fw_set_beacon(ifidx, "Flooloo", 100)
+
+# capture beacons
+    time.sleep(3)
+
+    os.kill(p.pid, 15)
+
+    pkts = rdpcap(CAP_FILE)
+    bcns = 0
+    for p in pkts:
+        if matches_beacon(frame, p):
+            bcns += 1
+
+# once every 100ms for 3 seconds is ample time to see at least say 5 beacons
+# including losses
+    if bcns > 5:
         sys.exit(0)
     else:
         sys.exit(1)

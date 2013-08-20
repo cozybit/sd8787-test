@@ -29,18 +29,18 @@ sleep 1
 sudo killall tcpdump
 # inspect capture for frame
 IFACE_ADDR=`if2mac $IFACE`
-FOUND=`tshark -r$CAP_FILE -R"wlan.addr == $IFACE_ADDR" | wc -l`
+FOUND=`tshark -r$CAP_FILE -Y"wlan.addr == $IFACE_ADDR" | wc -l`
 [ "$FOUND" -lt 1 ] && fail "couldn't find frames from $IFACE_ADDR"
 
 # Our test frames are UDP with udp port 0x123.  Look for that.
-FOUND=`tshark -r$CAP_FILE -R"wlan.addr == $IFACE_ADDR && udp.port == 0x123" | wc -l`
+FOUND=`tshark -r$CAP_FILE -Y"wlan.addr == $IFACE_ADDR && udp.port == 0x123" | wc -l`
 [ "$FOUND" -lt 1 ] && fail "Frames from $IFACE_ADDR have an invalid UDP format"
 
 # And now confirm payload integrity
-FOUND=`tshark -r$CAP_FILE -R"wlan.addr == $IFACE_ADDR && udp.port == 0x123 && data.data == \"$PAYLOAD\"" | wc -l`
+FOUND=`tshark -r$CAP_FILE -Y"wlan.addr == $IFACE_ADDR && udp.port == 0x123 && data.data == \"$PAYLOAD\"" | wc -l`
 [ "$FOUND" -lt 1 ] && fail "Frames from $IFACE_ADDR have an invalid payload"
 
 # Test previous check
-FOUND=`tshark -r$CAP_FILE -R"wlan.addr == $IFACE_ADDR && udp.port == 0x123 && data.data == \"beef\"" | wc -l`
+FOUND=`tshark -r$CAP_FILE -Y"wlan.addr == $IFACE_ADDR && udp.port == 0x123 && data.data == \"beef\"" | wc -l`
 [ "$FOUND" -ge 1 ] && fail "Frames from $IFACE_ADDR have an invalid payload"
 exit 0

@@ -23,11 +23,10 @@ MIN_RATE=11
 
 # iterate through all the addresses in the address range a few times 
 # to minimize the possibility of the sniffer capturing high data rate frames
-testmode $IFACE send_to_many_peers $PAYLOAD $BASE_ADDRESS $ADDRESS_RANGE
-testmode $IFACE send_to_many_peers $PAYLOAD $BASE_ADDRESS $ADDRESS_RANGE
-testmode $IFACE send_to_many_peers $PAYLOAD $BASE_ADDRESS $ADDRESS_RANGE
-testmode $IFACE send_to_many_peers $PAYLOAD $BASE_ADDRESS $ADDRESS_RANGE
-
+for i in {1..7}
+do
+	testmode $IFACE send_to_many_peers $PAYLOAD $BASE_ADDRESS $ADDRESS_RANGE
+done
 
 sleep 1
 sudo killall tcpdump

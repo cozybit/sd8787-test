@@ -435,8 +435,7 @@ def fw_bcn(ifidx, monif):
 # start capture, would be nice to use the pypcap library, but apparently it
 # can't passively write to a capture file in the background. Spawn a tcpdump
 # session instead. Oh well.
-    p = Popen("tcpdump -i%s -w%s" % (monif, CAP_FILE), shell=True, stderr=devnull)
-    p.pid += 1 # child, god help me
+    p = Popen(["tcpdump", "-i" + monif, "-w" + CAP_FILE], stderr=devnull)
     time.sleep(3)
 
     frame = fw_set_beacon(ifidx, "Flooloo", 100)

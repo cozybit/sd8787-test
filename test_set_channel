@@ -11,4 +11,4 @@ KNOWN_CH=${KNOWN_CH:-11}
 set_monitor $IFACE
 link_up $IFACE
 fw_set_ch $IFACE $KNOWN_CH
-timeout 3 sudo tcpdump -i$IFACE 2> /dev/null | grep $KNOWN_SSID &> /dev/null || fail "SSID not found, must be wrong channel!"
+sudo timeout 3 tcpdump -i$IFACE 2> /dev/null | grep $KNOWN_SSID &> /dev/null || fail "SSID not found, must be wrong channel!"

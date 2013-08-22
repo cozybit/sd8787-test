@@ -4,8 +4,6 @@
 # unlike fw test, no explicit setting of flags is done.
 source `dirname $0`/common.sh
 
-reload_card
-
 set_monitor $IFACE
 link_up $IFACE
-timeout 5 sudo tcpdump -i $IFACE -c1 || fail "didn't get any frames!"
+timeout 5 sudo tcpdump -i $IFACE -c1 >/dev/null || fail "didn't get any frames!"

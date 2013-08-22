@@ -1,0 +1,39 @@
+#!/bin/bash
+#
+# The firmware seems to not pass up beacons when the hardware is beaconing
+# Attach a (non-promiscuous) monitor interface to the beaconing vif and check
+# this.
+
+source `dirname $0`/common.sh
+[ "$1" != "noreload" ] && reload_card
+
+check_bcn_rx() {
+	local monif=$1
+	BCNS=`sudo tcpdump -i$monif -c30 -p 2> /dev/null | grep Beacon`
+	[ -z "$BCNS" ] && fail "no beacons found"
+	return 0
+}
+
+MESHID=fooo
+MONIF=$IFACE.mon
+
+sudo ip link set $IFACE down
+sudo iw $IFACE set type mp
+
+# attach monitor
+sudo iw $IFACE interface add $MONIF type monitor
+sudo ip link set $MONIF up
+
+# start beaconing
+sudo ip link set $IFACE up
+sudo iw $IFACE mesh join $MESHID
+
+check_bcn_rx $MONIF
+
+# Following sequence is important! we must leave then rejoin the mesh to ignore
+# beacons...
+sudo iw $IFACE mesh leave
+sleep 1
+sudo iw $IFACE mesh join $MESHID
+
+check_bcn_rx $MONIF

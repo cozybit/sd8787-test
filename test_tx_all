@@ -11,7 +11,7 @@ set_monitor $IFACE
 fw_set_ch $IFACE $CH
 set_channel $MON_IFACE $CH
 
-start_capture $MON_IFACE $CAP_FILE &
+start_capture_filter_mac $MON_IFACE $CAP_FILE $IFACE &
 sleep 2
 cap_pid=$!
 

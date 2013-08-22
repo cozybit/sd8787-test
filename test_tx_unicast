@@ -13,7 +13,7 @@ fw_set_ch $IFACE $CH
 set_channel $MON_IFACE $CH
 
 # start capturing on MON_IFACE
-start_capture $MON_IFACE $CAP_FILE &
+start_capture_filter_mac $MON_IFACE $CAP_FILE $IFACE &
 sleep 2
 cap_pid=$!
 
@@ -21,7 +21,8 @@ cap_pid=$!
 testmode $IFACE send_data_unicast $PAYLOAD
 
 sleep 1
-sudo killall tcpdump
+stop_all_captures
+
 # inspect capture for frame
 IFACE_ADDR=`if2mac $IFACE`
 

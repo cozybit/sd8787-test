@@ -49,11 +49,9 @@ start_capture_filter_mac() {
     local iface=$1
     local file=$2
     local addr=`if2mac $3`
-    echo -n '' >$file
-    sudo chown $USER $file
     capfilter="wlan addr1 $addr or wlan addr2 $addr"
-    err=`sudo tshark -i$iface -w$file -f"$capfilter" 2>&1`
-    [[ $? -eq 0 ]] || fail "could not launch tshark for capture:$err"
+    err=$(sudo tshark -i$iface -w- -f"$capfilter" 2>&1 >$file)
+    [[ $? -eq 0 ]] || fail "could not launch tshark for capture: $err"
 }
 
 stop_all_captures() {

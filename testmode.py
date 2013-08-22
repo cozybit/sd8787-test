@@ -458,6 +458,64 @@ def fw_bcn(ifidx, monif):
     else:
         sys.exit(1)
 
+def matches_preq(tx, rx):
+    try:
+        rx[Dot11]
+        rx[Dot11Action]
+        rx[Dot11Mesh]
+    except IndexError:
+        return False
+
+    if (tx.subtype != rx.subtype or
+        tx.type != rx.type or
+        tx.addr1 != rx.addr1 or
+        tx.addr2 != rx.addr2 or
+        tx.addr3 != rx.addr3 or
+        tx[Dot11Action].category != rx[Dot11Action].category or
+        tx[Dot11Mesh].mesh_action != rx[Dot11Mesh].mesh_action):
+        # can't check rx[Dot11Elt] here since it apparently isn't filled out
+        # for dissected frames, oh well, it's definitely a PREQ from tx
+           return False
+
+    return True
+
+def tx_preq(ifindex, monif):
+    mac = mac_address(ifindex)
+
+    devnull = open(os.devnull,"w")
+
+# start capture, would be nice to use the pypcap library, but apparently it
+# can't passively write to a capture file in the background. Spawn a tcpdump
+# session instead. Oh well.
+    p = Popen(["tcpdump", "-i" + monif, "-w" + CAP_FILE], stderr=devnull)
+    time.sleep(3)
+
+    pkt = get_mesh_preq(mac, "11:22:33:44:55:66")
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+    fw_send_frame(ifindex, str(pkt))
+
+    wrpcap("/tmp/refcap.cap", pkt)
+
+    time.sleep(2)
+    os.kill(p.pid, 15)
+
+# read frame
+    pkts = rdpcap(CAP_FILE)
+    found = False
+    for p in pkts:
+        if matches_preq(pkt, p):
+            found = True
+            break
+
+    if found:
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+
 import getopt, sys
 
 def usage():

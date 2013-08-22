@@ -12,8 +12,10 @@ set_monitor $IFACE
 fw_set_ch $IFACE $CH
 set_channel $MON_IFACE $CH
 
+IFACE_ADDR=`if2mac $IFACE`
+
 # start capturing on MON_IFACE
-start_capture $MON_IFACE $CAP_FILE &
+start_capture_filter_mac $MON_IFACE $CAP_FILE $IFACE_ADDR &
 sleep 2
 cap_pid=$!
 
@@ -29,9 +31,10 @@ do
 done
 
 sleep 1
-sudo killall tcpdump
+stop_all_captures
 # inspect capture for frame
-IFACE_ADDR=`if2mac $IFACE`
+
+sudo chown $USER $CAP_FILE
 
 FOUND=`tshark -r$CAP_FILE -Y"wlan.addr == $IFACE_ADDR" | wc -l`
 [ "$FOUND" -lt 1 ] && fail "couldn't find frames from $IFACE_ADDR"

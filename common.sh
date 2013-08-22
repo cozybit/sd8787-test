@@ -45,6 +45,18 @@ start_capture() {
 	sudo tcpdump -i$iface -w$file &>/dev/null
 }
 
+start_capture_filter_mac() {
+    local iface=$1
+    local file=$2
+    local addr=$3
+    sudo tshark -i$iface -w$file -f"wlan addr1 $addr or wlan addr2 $addr" &>/dev/null
+}
+
+stop_all_captures() {
+    sudo killall tshark &>/dev/null
+    sudo killall tcpdump &>/dev/null
+}
+
 set_channel() {
 	local iface=$1
 	local ch=$2

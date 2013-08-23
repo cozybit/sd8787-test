@@ -6,4 +6,4 @@ source `dirname $0`/common.sh
 
 set_monitor $IFACE
 link_up $IFACE
-sudo timeout 5 tcpdump -i $IFACE -c1 >/dev/null || fail "didn't get any frames!"
+sudo timeout 5 tcpdump -i $IFACE -c1 &>/dev/null || fail "didn't get any frames!"

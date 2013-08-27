@@ -55,8 +55,8 @@ start_capture_filter_mac() {
 }
 
 stop_all_captures() {
-    sudo killall tshark &>/dev/null
-    sudo killall tcpdump &>/dev/null
+    sudo killall -w tshark &>/dev/null
+    sudo killall -w tcpdump &>/dev/null
 }
 
 set_channel() {

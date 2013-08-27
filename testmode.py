@@ -215,7 +215,7 @@ def tx_feedback(ifindex, payload):
         sys.exit(1)
     if event_id != MWL8787_EVENT_DATA_TX_FEEDBACK:
         sys.exit(1)
-    if (event_data >> 24 != 0xbc):    # magic tx_feedback's first byte
+    if (event_data >> 24 != 0x00):    # TX queue
         sys.exit(1)
     FAIL = 0
     if (event_data & 0xff != FAIL):   # frame was sent to bogus peer so status should be FAIL
@@ -281,7 +281,7 @@ def fw_send_frame(ifindex, frame):
     LEN = len(frame)
     OFFSET = 16
     TYPE = 0x5 # 802.11
-    RES1 = 0
+    RES1 = 0x20000 # REQ_TX_STATUS
     PRIORITY = 0
     FLAGS = 0
     DELAY = 0

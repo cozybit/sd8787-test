@@ -15,9 +15,8 @@ set_channel $MON_IFACE $CH
 IFACE_ADDR=`if2mac $IFACE`
 
 # start capturing on MON_IFACE
-start_capture_filter_mac $MON_IFACE $CAP_FILE $IFACE_ADDR &
+start_capture_filter_mac $MON_IFACE $CAP_FILE $IFACE &
 sleep 2
-cap_pid=$!
 
 BASE_ADDRESS="90:f6:52:76:4e:"
 ADDRESS_RANGE=32

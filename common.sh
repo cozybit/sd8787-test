@@ -85,5 +85,13 @@ if2mac () {
 	sudo iw dev | grep $1 -A3 | grep addr | awk '{print $2}'
 }
 
+setmac() {
+	local iface=$1
+	local addr=$2
+	link_down $iface
+	sudo ip link set $iface addr $addr
+	link_up $iface
+}
+
 [ -z "$DRIVER" -o -z "$IFACE" ] && fail "please specify driver and iface"
 [ ! -z "$MON_IFACE" ] && set_monitor $MON_IFACE

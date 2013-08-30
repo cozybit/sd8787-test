@@ -560,7 +560,7 @@ if __name__ == "__main__":
     if test == "set_radio":
         radio_control(ifindex, True if arglist[0] == "on" else False)
     elif test == "set_mac":
-        mac = [int(x) for x in arglist[0].split(":")]
+        mac = [int(x,16) for x in arglist[0].split(":")]
         mac_address(ifindex, address=mac)
     elif test == "get_mac":
         address = mac_address(ifindex)

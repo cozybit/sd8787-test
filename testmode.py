@@ -38,6 +38,8 @@ MWL8787_CMD_802_11_CMD_MONITOR   = 0x0102
 MWL8787_CMD_BEACON_SET           = 0x00cb
 MWL8787_CMD_802_11_HEART_BEAT    = 0x00da
 MWL8787_CMD_BEACON_CTRL          = 0x010e
+MWL8787_CMD_SET_PEER             = 0x0110
+MWL8787_CMD_DEL_PEER             = 0x0111
 
 CMD_ACT_GET                     = 0
 CMD_ACT_SET                     = 1
@@ -232,6 +234,22 @@ def tx_feedback(ifindex, payload):
     p.join()
     sys.exit(0)
 
+def fw_add_peer(ifindex, mac=None):
+    if not mac:
+        print "please specify a peer mac address to add!"
+        raise
+
+    ALL_RATES=0xffffffff
+    macbytes = struct.pack("<6B", *[int(x,16) for x in mac.split(":")])
+    do_cmd(MWL8787_CMD_SET_PEER, "<" + str(len(str(macbytes))) + "sI", str(macbytes), ALL_RATES)
+
+def fw_del_peer(ifindex, mac=None):
+    if not mac:
+        print "please specify a peer mac address to delete!"
+        raise
+
+    do_cmd(MWL8787_CMD_DEL_PEER, "<6B", *[int(x,16) for x in mac.split(":")])
+
 def send_data_multicast(ifindex, data=None):
     if not data:
         print "please specify a payload"
@@ -250,7 +268,9 @@ def send_data_unicast(ifindex, data=None):
     mac = mac_address(ifindex)
 
     frame = get_mesh_4addr_data(mac, "00:11:22:33:44:55", data)
+    fw_add_peer(ifindex, mac)
     fw_send_frame(ifindex, str(frame))
+    fw_del_peer(ifindex, mac)
 
 def send_to_many_peers(ifindex, data, base_address, address_range):
     if not data:
@@ -262,6 +282,14 @@ def send_to_many_peers(ifindex, data, base_address, address_range):
     for i in range(int(address_range)):
         dst = base_address + "%02x" % i
         frame = get_mesh_4addr_data(mac, dst, data)
+
+        # need to add the peer first
+        try:
+            fw_add_peer(ifindex, dst)
+        except OSError:
+            print "couldn't add peer #%d!" % i
+            exit(1)
+
         try:
             fw_send_frame(ifindex, str(frame))
         except OSError as e:
@@ -272,6 +300,11 @@ def send_to_many_peers(ifindex, data, base_address, address_range):
                 fw_send_frame(ifindex, str(frame))
             else:
                 raise
+
+# clean up everything we added
+    for i in range(int(address_range)):
+        dst = base_address + "%02x" % i
+        fw_del_peer(ifindex, dst)
 
 def fw_send_frame(ifindex, frame):
 

@@ -61,7 +61,8 @@ stop_all_captures() {
 set_channel() {
 	local iface=$1
 	local ch=$2
-	sudo iw $iface set channel $ch || fail
+	local chtype=$3
+	sudo iw $iface set channel $ch $chtype || fail
 }
 
 link_up() {
@@ -142,9 +143,10 @@ start_mesh() {
 	local if=$(eval echo \${$1[if]})
 	local ssid=$(eval echo \${$bss[ssid]})
 	local ch=$(eval echo \${$bss[channel]})
+	local chtype=$(eval echo \${$bss[chtype]})
 
 	set_mesh $if
-	set_channel $if $ch
+	set_channel $if $ch $chtype
 	sudo iw $if mesh join $ssid
 	if_up $1
 }
@@ -268,6 +270,7 @@ declare -A bss0
 bss0[ssid]=foo
 bss0[ip]=10.10.10.0
 bss0[channel]=6
+bss0[chtype]=HT20
 
 declare -A dev0
 dev0[if]=$IFACE

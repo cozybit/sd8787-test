@@ -239,7 +239,7 @@ def fw_add_peer(ifindex, mac=None):
         print "please specify a peer mac address to add!"
         raise
 
-    ALL_RATES=0xffffffff
+    ALL_RATES=0xfff
     macbytes = struct.pack("<6B", *[int(x,16) for x in mac.split(":")])
     do_cmd(MWL8787_CMD_SET_PEER, "<" + str(len(str(macbytes))) + "sI", str(macbytes), ALL_RATES)
 
@@ -248,7 +248,16 @@ def fw_del_peer(ifindex, mac=None):
         print "please specify a peer mac address to delete!"
         raise
 
-    do_cmd(MWL8787_CMD_DEL_PEER, "<6B", *[int(x,16) for x in mac.split(":")])
+    try:
+        do_cmd(MWL8787_CMD_DEL_PEER, "<6B", *[int(x,16) for x in mac.split(":")])
+    except OSError as e:
+        if (e.errno == 1):
+            # sometimes the command / response get mixed up and we "timeout",
+            # if so just try again. This command will fail (since the peer is
+            # (hopefully) already gone), but at least it will time out if the
+            # firmware truly crashed and raise an exception.
+            time.sleep(0.5)
+            do_cmd(MWL8787_CMD_DEL_PEER, "<6B", *[int(x,16) for x in mac.split(":")])
 
 def send_data_multicast(ifindex, data=None):
     if not data:
@@ -266,11 +275,12 @@ def send_data_unicast(ifindex, data=None):
         raise
 
     mac = mac_address(ifindex)
+    PEERMAC = "00:11:22:33:44:55"
 
-    frame = get_mesh_4addr_data(mac, "00:11:22:33:44:55", data)
-    fw_add_peer(ifindex, mac)
+    frame = get_mesh_4addr_data(mac, PEERMAC, data)
+    fw_add_peer(ifindex, PEERMAC)
     fw_send_frame(ifindex, str(frame))
-    fw_del_peer(ifindex, mac)
+    fw_del_peer(ifindex, PEERMAC)
 
 def send_to_many_peers(ifindex, data, base_address, address_range):
     if not data:
@@ -288,6 +298,10 @@ def send_to_many_peers(ifindex, data, base_address, address_range):
             fw_add_peer(ifindex, dst)
         except OSError:
             print "couldn't add peer #%d!" % i
+            # clean up peers we did add before quitting
+            for j in range(i):
+                dst = base_address + "%02x" % i
+                fw_del_peer(ifindex, dst)
             exit(1)
 
         try:

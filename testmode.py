@@ -193,7 +193,7 @@ def set_mac_ctl(ifindex, mask):
     # RXon, mcast, bcast, promisc, allmulti, 802.11, mgmt
     #PROMISC=0b0101000111100001
     mask = int(mask, base=0)
-    do_cmd(MWL8787_CMD_802_11_MAC_CONTROL, "<H", mask)
+    do_cmd(MWL8787_CMD_802_11_MAC_CONTROL, "<I", mask)
 
 def radio_control(ifindex, on=False, action=CMD_ACT_SET):
     """ set/get radio on/off """

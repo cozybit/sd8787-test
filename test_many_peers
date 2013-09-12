@@ -19,7 +19,7 @@ start_capture_filter_mac $MON_IFACE $CAP_FILE $IFACE &
 sleep 2
 
 BASE_ADDRESS="90:f6:52:76:4e:"
-ADDRESS_RANGE=32
+ADDRESS_RANGE=10
 MIN_RATE=11
 
 # iterate through all the addresses in the address range a few times 

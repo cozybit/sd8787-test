@@ -274,18 +274,22 @@ def send_data_multicast(ifindex, data=None):
     frame = get_mesh_mcast_data(mac, "ff:ff:ff:ff:ff:ff", data)
     fw_send_frame(ifindex, str(frame))
 
-def send_data_unicast(ifindex, data=None):
+def send_data_unicast(ifindex, data=None, peer=None):
     if not data:
         print "please specify a payload"
         raise
 
     mac = mac_address(ifindex)
-    PEERMAC = "00:11:22:33:44:55"
+    peermac = peer
+    if not peer:
+        peermac = "00:11:22:33:44:55"
 
-    frame = get_mesh_4addr_data(mac, PEERMAC, data)
-    fw_add_peer(ifindex, PEERMAC)
+    frame = get_mesh_4addr_data(mac, peermac, data)
+    if (not peer):
+        fw_add_peer(ifindex, peermac)
     fw_send_frame(ifindex, str(frame))
-    fw_del_peer(ifindex, PEERMAC)
+    if (not peer):
+        fw_del_peer(ifindex, peermac)
 
 def send_to_many_peers(ifindex, data, base_address, address_range):
     if not data:

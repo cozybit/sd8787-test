@@ -46,9 +46,13 @@ CMD_ACT_SET                     = 1
 CMD_ACT_BITWISE_SET             = 2
 CMD_ACT_BITWISE_GET             = 3
 
+EVENT_SUBSCRIBE_MAX_FAIL_BITMAP         = 0x0004
 EVENT_SUBSCRIBE_DATA_TX_FEEDBACK_BITMAP = 0x1000
 
+MWL8787_EVENT_MAX_FAIL          = 0x1b
 MWL8787_EVENT_DATA_TX_FEEDBACK = 0x0067
+
+MWL8787_EVENT_MAX_FAIL_DATA = 0x0106
 
 libc = ctypes.CDLL(ctypes.util.find_library('c'))
 family = genetlink.controller.get_family_id('nl80211')
@@ -235,6 +239,31 @@ def tx_feedback(ifindex, payload):
         None
     MAX_RETRIES=0xa
     if ((event_data >> 16) & 0xff != MAX_RETRIES):   
+        sys.exit(1)
+    p.join()
+    sys.exit(0)
+
+def max_fail(ifindex):
+# 1 failed frame triggers, don't repeat event
+    data = struct.pack("<HH2B", MWL8787_EVENT_MAX_FAIL_DATA, 2, 1, 0)
+    subscribe_event(ifindex, EVENT_SUBSCRIBE_MAX_FAIL_BITMAP, data)
+    q = Queue()
+    p = Process(target=event_trap, args=(ifindex, q))
+    p.start()
+# transmissions to non-existing peer should trigger this event
+    peer = "00:11:22:33:44:55"
+    payload = "stuff"
+    fw_add_peer(ifindex, peer)
+    send_data_unicast(ifindex, payload, peer=peer)
+    try:
+        event_id, event_data = q.get(block = True, timeout = 5)
+    except Empty:
+        sys.exit(1)
+    fw_del_peer(ifindex, peer)
+    if event_id != MWL8787_EVENT_MAX_FAIL:
+        sys.exit(1)
+    # check we got event for right sta
+    if (event_data != ( 0x00, 0x11, 0x22, 0x33, 0x44, 0x55 )):
         sys.exit(1)
     p.join()
     sys.exit(0)

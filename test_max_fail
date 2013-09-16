@@ -1,0 +1,6 @@
+#!/bin/bash
+source `dirname $0`/common.sh
+
+[ "$1" != "noreload" ] && reload_card
+
+testmode $IFACE max_fail

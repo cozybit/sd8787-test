@@ -143,11 +143,15 @@ def heartbeat(ifindex, d2h_timer=0):
 
     do_cmd(MWL8787_CMD_802_11_HEART_BEAT, "<HHH", CMD_ACT_SET, h2d_timer, d2h_timer)
 
-def subscribe_event(ifindex, event_mask):
+def subscribe_event(ifindex, event_mask, data=None):
     """
     Subscribe to a set of events.
     """
     payload = struct.pack("<HH", CMD_ACT_BITWISE_SET, event_mask)
+
+    if data:
+        payload += data
+
     hdr, attrs = send_cmd(NL80211_CMD_TESTMODE, [
         netlink.U32Attr(NL80211_ATTR_IFINDEX, ifindex),
         netlink.Nested(NL80211_ATTR_TESTDATA, [

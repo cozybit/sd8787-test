@@ -102,9 +102,9 @@ def event_trap(ifindex, queue=None):
 
     testdata = attrs[NL80211_ATTR_TESTDATA].nested()
     event_id = struct.unpack("<L", testdata[MWL8787_TM_ATTR_FW_EVT_ID].data)
-    data = struct.unpack("<L", testdata[MWL8787_TM_ATTR_DATA].data)
+    data = struct.unpack("<" + str(len(testdata[MWL8787_TM_ATTR_DATA].data)) + "B", testdata[MWL8787_TM_ATTR_DATA].data)
     if queue:
-        queue.put([event_id[0], data[0]])
+        queue.put([event_id[0], data])
 
 def event_monitor(ifindex):
     """
@@ -217,6 +217,7 @@ def tx_feedback(ifindex, payload):
         sys.exit(1)
     if event_id != MWL8787_EVENT_DATA_TX_FEEDBACK:
         sys.exit(1)
+    event_data = struct.unpack("<L", struct.pack("<4B", *event_data))[0]
     if (event_data >> 24 != 0x00):    # TX queue
         sys.exit(1)
     FAIL = 0

@@ -219,13 +219,49 @@ check_ping () {
 # start iperf session from node a -> b
 # start_straffic $a $b
 start_traffic () {
-	local ip_a=$(eval echo \${$1[ip]})
-	local ip_b=$(eval echo \${$2[ip]})
-	local sta_b=$(eval echo \${$2[if]})
+	local a=$1
+	local b=$2
+	local ip_a=$(eval echo \${$a[ip]})
+	local ip_b=$(eval echo \${$b[ip]})
+	local sta_a=$(eval echo \${$a[if]})
+	local sta_b=$(eval echo \${$b[if]})
+	local IPERF_LOG="log/iperf_${sta_a}_${sta_b}"
 
-	iperf -s -B$ip_b -u -i1 > log/iperf_${sta_b} &
+	# server
+	# XXX: ugh, we can't use CSV reports since there is a bug when printing
+	# the throughput on pandaboard?
+	iperf -s -B$ip_b -u -i1 > $IPERF_LOG &
+	eval $b[iperf_pid]=$!
+	eval $b[iperf_log]=$IPERF_LOG
 	sleep 2	# wait for server to start
-	iperf -B $ip_a -c $ip_b -fm -i1 -t1000000 -u -b100M > /dev/null &
+
+	# client
+	iperf -B $ip_a -c $ip_b -i1 -t1000000 -u -b100M > /dev/null &
+	eval $a[iperf_pid]=$!
+}
+
+# iperf sessions are all forked off, so we need to stop them manually
+stop_traffic () {
+	local a=$1
+	local b=$2
+	local pid_a=$(eval echo \${$a[iperf_pid]})
+	local pid_b=$(eval echo \${$b[iperf_pid]})
+
+	kill $pid_a && wait $pid_a
+	kill $pid_b && wait $pid_b
+
+	eval $a[iperf_pid]=""
+	eval $b[iperf_pid]=""
+}
+
+# get throughput from destination (server) node, hopefully in Mbps
+# get_throughput $node
+get_throughput () {
+	local iperf_log=$(eval echo \${$1[iperf_log]})
+
+	[ -z "$iperf_log" ] && { echo "no iperf log?"; return 1; }
+
+	cat $iperf_log | grep -v "out-of-order" | tail -n1 | awk '{print $7}'
 }
 
 kill_routes () {

@@ -111,12 +111,12 @@ clean_phy () {
 if2ip () {
 	local iface=$1
 
-        echo -n `ip addr show $iface | grep -m 1 "inet" | awk '{print$2}' | cut -d'/' -f1`
+        echo -n `sudo ip addr show $iface | grep -m 1 "inet" | awk '{print$2}' | cut -d'/' -f1`
 }
 
 # if2idx <iface>
 if2idx () {
-	echo -n `iw dev | grep $1 -A2 | grep "\<ifindex\>" | awk '{print $2}'`
+	echo -n `sudo iw dev | grep $1 -A2 | grep "\<ifindex\>" | awk '{print $2}'`
 }
 
 # increment_ip <ip>

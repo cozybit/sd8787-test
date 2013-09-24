@@ -4,6 +4,7 @@ source config
 
 fail() {
 	echo "$@"
+	cleanup
 	exit 1
 }
 

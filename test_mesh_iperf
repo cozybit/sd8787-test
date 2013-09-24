@@ -17,17 +17,14 @@ start_traffic dev0 ref0
 sleep 20
 stop_traffic dev0 ref0
 
-# check throughput
-TPUT=`get_throughput ref0`
-echo "$TPUT $TARGET_TX_TPUT" | awk '{if ($1 > $2) exit 0; else exit 1}' || fail "couldn't meet TX threshold"
+check_tput ref0 $TARGET_TX_TPUT "couldn't meet TX threshold!"
 
 # try ath9k_htc -> 8787
 start_traffic ref0 dev0
 sleep 20
 stop_traffic ref0 dev0
 
-TPUT=`get_throughput dev0`
-echo "$TPUT $TARGET_RX_TPUT" | awk '{if ($1 > $2) exit 0; else exit 1}' || fail "couldn't meet RX threshold"
+check_tput dev0 $TARGET_RX_TPUT "couldn't meet RX threshold!"
 
 # if we got here, and both throughputs are above the threshold, the firmware
 # didn't crash either

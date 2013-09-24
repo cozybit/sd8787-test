@@ -217,6 +217,18 @@ check_ping () {
 	sudo ping -I$ifa $ipb -f -w4 -Q 0xf0 &>/dev/null || fail "ping $2 from $1"
 }
 
+# check_tput $node $thold $fail_msg
+check_tput() {
+	local dest_node=$1
+	local thold=$2
+	local fail_msg=$3
+	local TPUT=`get_throughput $dest_node`
+	echo "tput $TPUT"
+
+	[ -z "$TPUT" ] && fail "couldn't get throughput to $dest_node!"
+	echo "$TPUT $thold" | awk '{if ($1 > $2) exit 0; else exit 1}' || fail "$fail_msg"
+}
+
 # start iperf session from node a -> b
 # start_straffic $a $b
 start_traffic () {

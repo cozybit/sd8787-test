@@ -262,7 +262,7 @@ get_throughput () {
 
 	[ -z "$iperf_log" ] && { echo "no iperf log?"; return 1; }
 
-	cat $iperf_log | grep -v "out-of-order" | tail -n1 | awk '{print $7}'
+	echo -n $(cat $iperf_log | grep -v "out-of-order" | grep -v "^$" | tail -n1 | sed -e 's/.* \([0-9]*\.*[0-9]*\) [[:alpha:]]bits.*/\1/')
 }
 
 kill_routes () {

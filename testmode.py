@@ -193,7 +193,10 @@ def set_channel(ifindex, channel):
     """ set channel """
     channel = int(channel)
     action = CMD_ACT_SET
-    BANDCHAN = 0 # 2.4 ghz, 20mhz, manual
+    if (channel > 12):
+        BANDCHAN = 1 # 5ghz
+    else:
+        BANDCHAN = 0 # 2.4 ghz, 20mhz, manual
 
     do_cmd(MWL8787_CMD_802_11_RF_CHANNEL, "<HH2B", action, channel,
            0, BANDCHAN)

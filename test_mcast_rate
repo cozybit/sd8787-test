@@ -1,0 +1,35 @@
+#!/bin/bash
+source `dirname $0`/common.sh
+
+CH=6
+CAP_FILE=out.cap
+PAYLOAD="hello"
+RATE=54
+
+[ "$1" != "noreload" ] && reload_card
+
+fw_set_ch $IFACE $CH
+set_channel $MON_IFACE $CH
+
+# start capturing on MON_IFACE
+start_capture_filter_mac $MON_IFACE $CAP_FILE $IFACE &
+sleep 2
+cap_pid=$!
+
+testmode $IFACE set_mcast_rate $RATE
+# hopefully some will make it...
+testmode $IFACE send_data_multicast $PAYLOAD
+testmode $IFACE send_data_multicast $PAYLOAD
+testmode $IFACE send_data_multicast $PAYLOAD
+testmode $IFACE send_data_multicast $PAYLOAD
+testmode $IFACE send_data_multicast $PAYLOAD
+testmode $IFACE send_data_multicast $PAYLOAD
+
+sleep 1
+stop_all_captures
+
+IFACE_ADDR=`if2mac $IFACE`
+FOUND=`tshark -r$CAP_FILE -Y"wlan.addr == $IFACE_ADDR && radiotap.datarate == $RATE" | wc -l`
+[ "$FOUND" -lt 1 ] && fail "couldn't find frames $IFACE_ADDR sent at ${RATE}Mb/s"
+
+exit 0

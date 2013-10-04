@@ -30,9 +30,11 @@ MWL8787_TM_CMD_DATA             = 2
 MWL8787_CMD_GET_HW_SPEC         = 0x0003
 MWL8787_CMD_802_11_RESET        = 0x0005
 MWL8787_CMD_802_11_MAC_ADDRESS  = 0x004d
+MWL8787_CMD_802_11_SNMP_MIB     = 0x0016
 MWL8787_CMD_802_11_RF_CHANNEL   = 0x001d
 MWL8787_CMD_802_11_MAC_CONTROL  = 0x0028
 MWL8787_CMD_802_11_RADIO_CONTROL = 0x001c
+
 MWL8787_CMD_802_11_SUBSCRIBE_EVENT    = 0x0075
 MWL8787_CMD_802_11_CMD_MONITOR   = 0x0102
 MWL8787_CMD_BEACON_SET           = 0x00cb
@@ -212,6 +214,18 @@ def radio_control(ifindex, on=False, action=CMD_ACT_SET):
 
     # non-zero is on
     do_cmd(MWL8787_CMD_802_11_RADIO_CONTROL, "<HH", action, control)
+
+mrvl_rates = { "1" : 0, "2" : 1, "5.5" : 2, "11" : 3, "22" : 4, \
+              "6" : 5, "9" : 6, "12" : 7, "18" : 8, "24" : 9, \
+              "36" : 10, "48" : 11, "54" : 12 }
+
+def set_mcast_rate(ifindex, rate=None):
+    if not rate:
+        print "need a rate!"
+        raise
+    rateid = mrvl_rates[rate]
+    print "setting rate to %d" % rateid
+    do_cmd(MWL8787_CMD_802_11_SNMP_MIB, "<HHHB", CMD_ACT_SET, 0xb, 1, rateid)
 
 def tx_feedback(ifindex, payload):
     subscribe_event(ifindex, EVENT_SUBSCRIBE_DATA_TX_FEEDBACK_BITMAP)

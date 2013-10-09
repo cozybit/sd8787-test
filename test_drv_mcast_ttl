@@ -1,0 +1,49 @@
+#!/bin/bash
+source `dirname $0`/common.sh
+
+COUNT=2             # send this many frames
+TTL=11              # with this ttl
+CH=6
+CAP_FILE=out.cap
+MCAST_ADDR=224.4.5.6
+PAYLOAD="01234567890123456789"
+
+PHY=`if2phy $IFACE`
+
+# join mesh
+start_mesh dev0
+if_up dev0
+
+# start capturing on MON_IFACE
+set_monitor $MON_IFACE
+set_channel $MON_IFACE $CH
+start_capture_filter_mac $MON_IFACE $CAP_FILE $IFACE &
+sleep 2
+cap_pid=$!
+
+# set mcast ttl
+OLD_TTL=`sudo cat /sys/kernel/debug/ieee80211/$PHY/netdev:$IFACE/mesh_config/mcast_ttl`
+echo $TTL | sudo tee /sys/kernel/debug/ieee80211/$PHY/netdev:$IFACE/mesh_config/mcast_ttl
+
+# send frames...
+./drv_tx.py mcast $IFACE $COUNT $MCAST_ADDR:7890 $PAYLOAD
+
+sleep 1
+stop_all_captures
+
+echo $OLD_TTL | sudo tee /sys/kernel/debug/ieee80211/$PHY/netdev:$IFACE/mesh_config/mcast_ttl
+
+# inspect capture for any frame from us
+IFACE_ADDR=`if2mac $IFACE`
+FOUND=`tshark -r$CAP_FILE -Y"wlan.addr == $IFACE_ADDR" | wc -l`
+[ "$FOUND" -lt 1 ] && fail "couldn't find frames from $IFACE_ADDR"
+
+# now check ttl
+FOUND=`tshark -r$CAP_FILE -Y"wlan.addr == $IFACE_ADDR && ip.dst == $MCAST_ADDR && data.data == \"$PAYLOAD\" && wlan_mgt.fixed.mesh_ttl == $TTL" | wc -l`
+[ "$FOUND" -lt 1 ] && fail "No frames with mesh ttl $TTL found"
+
+# make sure all mcast have that ttl
+FOUND=`tshark -r$CAP_FILE -Y"wlan.addr == $IFACE_ADDR && ip.dst == $MCAST_ADDR && data.data == \"$PAYLOAD\" && wlan_mgt.fixed.mesh_ttl != $TTL" | wc -l`
+[ "$FOUND" -gt 0 ] && fail "Frames with invalid mesh ttl found"
+cleanup
+

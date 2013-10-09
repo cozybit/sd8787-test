@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 source `dirname $0`/common.sh
 
 COUNT=2             # send this many frames
@@ -8,6 +8,8 @@ CH=6
 CAP_FILE=out.cap
 MCAST_ADDR=224.4.5.6
 PAYLOAD="01234567890123456789"
+
+PHY=`if2phy $IFACE`
 
 # join mesh
 start_mesh dev0
@@ -21,8 +23,8 @@ sleep 2
 cap_pid=$!
 
 # set mcast retries
-OLD_RETRIES=`sudo cat /sys/kernel/debug/ieee80211/phy*/netdev:$IFACE/mesh_config/mcast_retries`
-echo $RETRIES | sudo tee /sys/kernel/debug/ieee80211/phy*/netdev:$IFACE/mesh_config/mcast_retries
+OLD_RETRIES=`sudo cat /sys/kernel/debug/ieee80211/$PHY/netdev:$IFACE/mesh_config/mcast_retries`
+echo $RETRIES | sudo tee /sys/kernel/debug/ieee80211/$PHY/netdev:$IFACE/mesh_config/mcast_retries
 
 # send a couple of frames, and look for a lot more in the cap
 ./drv_tx.py mcast $IFACE 2 $MCAST_ADDR:7890 $PAYLOAD
@@ -30,7 +32,7 @@ echo $RETRIES | sudo tee /sys/kernel/debug/ieee80211/phy*/netdev:$IFACE/mesh_con
 sleep 1
 stop_all_captures
 
-echo $OLD_RETRIES | sudo tee /sys/kernel/debug/ieee80211/phy*/netdev:$IFACE/mesh_config/mcast_retries
+echo $OLD_RETRIES | sudo tee /sys/kernel/debug/ieee80211/$PHY/netdev:$IFACE/mesh_config/mcast_retries
 
 # inspect capture for any frame from us
 IFACE_ADDR=`if2mac $IFACE`

@@ -86,6 +86,10 @@ if2mac () {
 	sudo iw dev | grep $1 -A3 | grep addr | awk '{print $2}' | uniq
 }
 
+if2phy() {
+    sudo iw dev $1 info | grep wiphy | awk '{print "phy"$2}'
+}
+
 setmac() {
 	local iface=$1
 	local addr=$2

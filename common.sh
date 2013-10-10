@@ -19,7 +19,7 @@ testmode() {
 reload_card() {
 	sudo modprobe -r $DRIVER
 	# XXX: rfkill?
-	echo "reload card..."
+    echo "reload card..."
 	read
 	sudo modprobe mwl8787_sdio
 	# wait for firmware load
@@ -51,7 +51,7 @@ start_capture_filter_mac() {
     local file=$2
     local addr=`if2mac $3`
     capfilter="wlan addr1 $addr or wlan addr2 $addr"
-    sudo tshark -i$iface -w- -f"$capfilter" 2>/dev/null >$file
+    sudo tshark -i$iface -w- -f"$capfilter" >$file
 }
 
 stop_all_captures() {
@@ -152,9 +152,14 @@ start_mesh() {
 
 	set_mesh $if
 	set_channel $if $ch $chtype
-	sudo iw $if mesh join $ssid
+	if [[ $SECURE == "yes" ]]; then
+		sudo ~/ext/authsae/build/linux/meshd-nl80211 -c authsae.cfg -i $if &
+	else	
+		sudo iw $if mesh join $ssid
+	fi
 	if_up $1
 }
+
 # bring up $node on node[if] with ip node[ip]
 # if_up $node
 if_up () {
@@ -247,7 +252,7 @@ start_traffic () {
 	# server
 	# XXX: ugh, we can't use CSV reports since there is a bug when printing
 	# the throughput on pandaboard?
-	iperf -s -B$ip_b -u -i1 > $IPERF_LOG &
+	iperf -s -B$ip_b -u -i1 &
 	eval $b[iperf_pid]=$!
 	eval $b[iperf_log]=$IPERF_LOG
 	sleep 2	# wait for server to start
@@ -294,6 +299,7 @@ kill_routes () {
 cleanup () {
 	local exit_code=$1
 	sudo killall iperf &> /dev/null
+	sudo killall authsae &>/dev/null
 	# restore routing tables
 	for node in $NODES; do
 		kill_routes $node
@@ -322,8 +328,8 @@ echo "echo 1 > /proc/sys/net/ipv4/conf/all/arp_ignore" | sudo sh
 declare -A bss0
 bss0[ssid]=foo
 bss0[ip]=10.10.10.0
-bss0[channel]=6
-bss0[chtype]=HT20
+bss0[channel]=${CHAN:-6}
+bss0[chtype]=${CHANOPTS:-HT20}
 
 declare -A dev0
 dev0[if]=$IFACE

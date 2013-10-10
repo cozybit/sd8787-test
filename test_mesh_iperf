@@ -29,4 +29,4 @@ check_tput dev0 $TARGET_RX_TPUT "couldn't meet RX threshold!"
 # if we got here, and both throughputs are above the threshold, the firmware
 # didn't crash either
 
-cleanup
+cleanup 0

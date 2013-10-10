@@ -488,31 +488,6 @@ def test_tx_bcn(ifindex, monif):
     fw_send_frame(ifindex, str(pkt))
     fw_send_frame(ifindex, str(pkt))
     fw_send_frame(ifindex, str(pkt))
-    MESHID="foolfoo"
-    pkt = get_mesh_beacon(mac, MESHID)
-    fw_send_frame(ifindex, str(pkt))
-    fw_send_frame(ifindex, str(pkt))
-    fw_send_frame(ifindex, str(pkt))
-    MESHID="foolfo"
-    pkt = get_mesh_beacon(mac, MESHID)
-    fw_send_frame(ifindex, str(pkt))
-    fw_send_frame(ifindex, str(pkt))
-    fw_send_frame(ifindex, str(pkt))
-    MESHID="foolf"
-    pkt = get_mesh_beacon(mac, MESHID)
-    fw_send_frame(ifindex, str(pkt))
-    fw_send_frame(ifindex, str(pkt))
-    fw_send_frame(ifindex, str(pkt))
-    MESHID="fool"
-    pkt = get_mesh_beacon(mac, MESHID)
-    fw_send_frame(ifindex, str(pkt))
-    fw_send_frame(ifindex, str(pkt))
-    fw_send_frame(ifindex, str(pkt))
-    MESHID="foo"
-    pkt = get_mesh_beacon(mac, MESHID)
-    fw_send_frame(ifindex, str(pkt))
-    fw_send_frame(ifindex, str(pkt))
-    fw_send_frame(ifindex, str(pkt))
 
     time.sleep(1)
     os.kill(p.pid, 15)

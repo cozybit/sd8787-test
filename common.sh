@@ -121,7 +121,7 @@ if2ip () {
 
 # if2idx <iface>
 if2idx () {
-	echo -n `sudo iw dev | grep $1 -A2 | grep "\<ifindex\>" | awk '{print $2}'`
+	echo -n `sudo iw dev | grep $1$ -A2 | grep "\<ifindex\>" | awk '{print $2}'`
 }
 
 # increment_ip <ip>

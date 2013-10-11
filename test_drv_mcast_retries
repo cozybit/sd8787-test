@@ -2,8 +2,8 @@
 source `dirname $0`/common.sh
 
 COUNT=2             # send this many frames
-RETRIES=5           # this many times
-PASS=$[RETRIES * COUNT - 4]
+RETRIES=20          # this many times
+PASS=10
 CH=6
 CAP_FILE=out.cap
 MCAST_ADDR=224.4.5.6

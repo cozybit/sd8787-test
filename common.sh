@@ -59,6 +59,14 @@ stop_all_captures() {
     sudo killall -w tcpdump &>/dev/null
 }
 
+start_trace() {
+    sudo trace-cmd record -p function -l mwl8787\* -e mac80211 -e mwl8787 &>/dev/null
+}
+
+stop_trace() {
+    sudo killall -w trace-cmd &>/dev/null
+}
+
 set_channel() {
 	local iface=$1
 	local ch=$2

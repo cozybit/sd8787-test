@@ -2,17 +2,20 @@
 
 source `dirname $0`/common.sh
 
+noreload=0
 monitoring=0
 tracing=0
 
 while [ $# -ge 1 ]; do
     case $1 in
-       "noreload")   reload_card ;;
+       "noreload")   let noreload=1 ;;
        "monitor")    let monitoring=1 ;;
        "trace")      let tracing=1 ;;
     esac
     shift
 done
+
+[ $noreload -eq 0 ] && reload_card
 
 # Mbps
 TARGET_TX_TPUT=5

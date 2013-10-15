@@ -1,11 +1,41 @@
 #!/bin/bash
 
 source `dirname $0`/common.sh
-[ "$1" != "noreload" ] && reload_card
+
+monitoring=0
+tracing=0
+
+while [ $# -ge 1 ]; do
+    case $1 in
+       "noreload")   reload_card ;;
+       "monitor")    let monitoring=1 ;;
+       "trace")      let tracing=1 ;;
+    esac
+    shift
+done
 
 # Mbps
 TARGET_TX_TPUT=5
 TARGET_RX_TPUT=5
+
+CAP_FILE=logs/test_mesh_iperf.cap
+if [ ! -z "$MON_IFACE" -a $monitoring -ne 0 ]; then
+    bss=$(eval echo \${dev0[bss]})
+    channel=$(eval echo \${$bss[channel]})
+    chtype=$(eval echo \${$bss[chtype]})
+
+    set_monitor $MON_IFACE
+    set_channel $MON_IFACE $channel $chtype
+    start_capture_filter_mac $MON_IFACE $CAP_FILE $IFACE >/dev/null 2>&1 &
+    sleep 2
+    cap_pid=$!
+    echo "started capture $MON_IFACE $CAP_FILE $IFACE pid $cap_pid on $channel $chtype"
+fi
+
+if [ $tracing -ne 0 ]; then
+    start_trace &
+    echo "started trace"
+fi
 
 start_mesh dev0
 start_mesh ref0
@@ -28,5 +58,12 @@ check_tput dev0 $TARGET_RX_TPUT "couldn't meet RX threshold!"
 
 # if we got here, and both throughputs are above the threshold, the firmware
 # didn't crash either
+
+if [ $monitoring -ne 0 ]; then
+    stop_all_captures
+fi
+if [ $tracing -ne 0 ]; then
+    stop_trace
+fi
 
 cleanup 0

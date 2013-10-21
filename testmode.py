@@ -38,6 +38,8 @@ MWL8787_CMD_802_11_RADIO_CONTROL = 0x001c
 MWL8787_CMD_802_11_SUBSCRIBE_EVENT    = 0x0075
 MWL8787_CMD_802_11_CMD_MONITOR   = 0x0102
 MWL8787_CMD_BEACON_SET           = 0x00cb
+MWL8787_CMD_ADDBA                = 0x00ce
+MWL8787_CMD_DELBA                = 0x00d0
 MWL8787_CMD_802_11_HEART_BEAT    = 0x00da
 MWL8787_CMD_BEACON_CTRL          = 0x010e
 MWL8787_CMD_SET_PEER             = 0x0110
@@ -592,6 +594,42 @@ def tx_preq(ifindex, monif):
     else:
         sys.exit(1)
 
+def fw_ba(peer, add):
+    if add:
+        cmd = MWL8787_CMD_ADDBA
+    else:
+        cmd = MWL8787_CMD_DELBA
+
+    cmdbytes = struct.pack("<B6B", 0, *[int(x,16) for x in peer.split(":")])
+
+    if cmd == MWL8787_CMD_ADDBA:
+        cmdbytes += struct.pack("<B", 0)
+        # add / del parameters
+        cmdbytes += struct.pack("<H", (8 << 6 | 7 << 2 | 1 << 1 | 1))
+    else:
+        # add / del parameters
+        cmdbytes += struct.pack("<H", 0)
+
+    # junk
+    cmdbytes += struct.pack("<HH", 0, 0)
+
+    do_cmd(cmd, "<" + str(len(str(cmdbytes))) + "s", str(cmdbytes))
+
+def addba(ifindex, peer=None):
+
+    if not peer:
+        print "hey I need a peer mac!"
+        raise
+
+    fw_ba(peer, add=True)
+
+def delba(ifindex, peer=None):
+
+    if not peer:
+        print "hey I need a peer mac!"
+        raise
+
+    fw_ba(peer, add=False)
 
 import getopt, sys
 

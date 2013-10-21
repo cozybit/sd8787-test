@@ -1,0 +1,36 @@
+#!/bin/bash
+
+source `dirname $0`/common.sh
+[ "$1" != "noreload" ] && reload_card
+
+FAKEMAC="00:11:22:33:44:5"
+
+# current number of max AMPDU sessions is 2, so if we can add / remove 5
+# different onces, the fw should be working ok
+
+# first add all our peers
+for i in `seq 0 4`; do
+	peer="$FAKEMAC$i"
+	testmode $IFACE fw_add_peer $peer
+done
+
+# simulate switching between all of them
+for i in `seq 0 3`; do
+	peer1="$FAKEMAC$i"
+	peer2="$FAKEMAC$((i + 1))"
+	echo "addba $peer1"
+	testmode $IFACE addba $peer1
+	echo "addba $peer2"
+	testmode $IFACE addba $peer2
+	echo "delba $peer1"
+	testmode $IFACE delba $peer1
+	echo "delba $peer2"
+	testmode $IFACE delba $peer2
+done
+
+for i in `seq 0 4`; do
+	peer="$FAKEMAC$i"
+	testmode $IFACE fw_del_peer $peer
+done
+
+exit 0

@@ -605,7 +605,7 @@ def fw_ba(peer, add):
     if cmd == MWL8787_CMD_ADDBA:
         cmdbytes += struct.pack("<B", 0)
         # add / del parameters
-        cmdbytes += struct.pack("<H", (8 << 6 | 7 << 2 | 1 << 1 | 1))
+        cmdbytes += struct.pack("<H", (8 << 6 | 0 << 2 | 1 << 1 | 1))
     else:
         # add / del parameters
         cmdbytes += struct.pack("<H", 0)

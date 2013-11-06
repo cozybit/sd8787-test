@@ -251,7 +251,7 @@ start_traffic () {
 	local ip_b=$(eval echo \${$b[ip]})
 	local sta_a=$(eval echo \${$a[if]})
 	local sta_b=$(eval echo \${$b[if]})
-	local IPERF_LOG="log/iperf_${sta_a}_${sta_b}"
+	local IPERF_LOG="logs/iperf_${sta_a}_${sta_b}"
 
 	# server
 	# XXX: ugh, we can't use CSV reports since there is a bug when printing
@@ -313,7 +313,7 @@ cleanup () {
 }
 trap "cleanup" INT TERM
 
-mkdir -p log
+mkdir -p logs
 
 #### routing hacks  ####
 # move local routing table to lower priority in preparation to the new routing

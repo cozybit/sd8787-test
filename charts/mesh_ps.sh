@@ -14,8 +14,8 @@ function add_box
     local start=$5
     local end=$6
 
-    box_bl=$(echo $yoff-0.1 | bc)
-    box_tr=$(echo $yoff+0.1 | bc)
+    box_bl=$(echo $yoff-0.01 | bc)
+    box_tr=$(echo $yoff+0.01 | bc)
 
     echo "set object $obj_ct rect from $start,$box_bl to $end,$box_tr fc lt $lt lw 0" >> ${plotfile}
 }
@@ -35,7 +35,7 @@ obj_ct=1
 for sta in $stas; do
     # draw lines for dtim beacons
 	cat mesh-sta-$sta.dat | grep '1 1$' | awk '{print $1}' | \
-        sed -e "s/\(.*\)/set arrow from \1,(1.0$i-.1) to \1,(1.0$i+.1) nohead lc $i /g" >> ${plotfile}
+        sed -e "s/\(.*\)/set arrow from \1,(1.0$i-.02) to \1,(1.0$i+.02) nohead lc $i /g" >> ${plotfile}
 
     # add an awake window box for each beacon
 	while read line; do

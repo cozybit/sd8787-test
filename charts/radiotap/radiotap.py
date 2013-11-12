@@ -232,6 +232,16 @@ def is_qos_data(mac):
 
     return type == 2 and subtype == 0x8
 
+def is_qos_null(mac):
+    fc = mac.get('fc', 0)
+    type = (fc >> 2) & 0x3
+    subtype = (fc >> 4) & 0x0f;
+
+    return type == 2 and subtype == 0xc
+
+def is_qos(mac):
+    return is_qos_null(mac) or is_qos_data(mac)
+
 def ieee80211_parse(packet, offset):
     hdr_fmt = "<HH6s"
     hdr_len = struct.calcsize(hdr_fmt)
@@ -281,7 +291,7 @@ def ieee80211_parse(packet, offset):
         'frag': seq & 3
     })
 
-    if is_qos_data(mac):
+    if is_qos(mac):
         four_addr_fmt = "<6s"
         four_addr_len = struct.calcsize(four_addr_fmt)
         if len(packet) - offset < four_addr_len:

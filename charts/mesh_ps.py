@@ -90,7 +90,7 @@ for ts, pkt in pc:
     eosp = mac.get('eosp', -1)
     ps_mode = 'unknown'
 
-    if radiotap.is_qos_data(mac):
+    if radiotap.is_qos(mac):
         # in data frames:
         # pmfield = 0 -> active
         # pmfield = 1 ->

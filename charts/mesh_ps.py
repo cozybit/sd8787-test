@@ -42,7 +42,9 @@ fn = sys.argv[1]
 pc = pcap.pcap(fn)
 count = 0
 sta_files = {}
+window_files = {}
 nstas = 0
+windows = {}
 
 for ts, pkt in pc:
 
@@ -52,6 +54,13 @@ for ts, pkt in pc:
     if not rtap.has_key('TSFT'):
 	    continue
     ts = rtap['TSFT']
+
+    # check for expiry of any windows, if so write them to window_files
+    for sta in windows.keys():
+        window = windows[sta]
+        if ts > window['end']:
+            print >>window_files[sta], '%d %d' % (window['start'], window['end'])
+            windows.pop(sta)
 
     count += 1
 
@@ -64,6 +73,8 @@ for ts, pkt in pc:
         nstas += 1
         sta_files[sta] = open('mesh-sta-%s-%s.dat' %
 			(sta_hex[4], sta_hex[5]), 'w')
+        window_files[sta] = open('mesh-window-%s-%s.dat' %
+			(sta_hex[4], sta_hex[5]), 'w')
 
     dtim, bcn_ts, beacon = 0, 0, 0
     if is_beacon(mac):
@@ -71,6 +82,9 @@ for ts, pkt in pc:
         bcn_ts = beacon_ts(mac, pkt[ofs:])
         if is_dtim(mac, pkt[ofs+12:]):
             dtim = 1
+        windows.setdefault(sta, {})
+        windows[sta]['start'] = ts
+        windows[sta]['end'] = ts + 10 * 1024 # FIXME read from awake window IE
 
     rspi = mac.get('rspi', -1)
     eosp = mac.get('eosp', -1)
@@ -91,8 +105,15 @@ for ts, pkt in pc:
         else:
             ps_mode = 'deep'
 
+        # a directed frame with eosp = 0 extends the window
+        if eosp == 0:
+            dest = mac.get('addr1')
+            if dest in windows:
+                windows[dest]['end'] = ts + 10 * 1024
+
     print >>sta_files[sta], '%s %s %s %d %d %s %d %d' % (ts, sta, bcn_ts, rspi, eosp, ps_mode, beacon, dtim)
 
 for sta in sorted(sta_files):
     sta_files[sta].close()
+    window_files[sta].close()
 

@@ -38,13 +38,12 @@ for sta in $stas; do
         sed -e "s/\(.*\)/set arrow from \1,(1.0$i-.1) to \1,(1.0$i+.1) nohead lc $i /g" >> ${plotfile}
 
     # add an awake window box for each beacon
-    grep '1 [01]$' mesh-sta-$sta.dat > beacons.tmp
 	while read line; do
         awake_start=$(echo $line | awk '{print $1;}')
-        awake_end=$(echo $awake_start+1024*10 | bc)
+        awake_end=$(echo $line | awk '{print $2;}')
         add_box $obj_ct $sta 1.0$i $i $awake_start $awake_end
 	    let $((obj_ct++))
-    done < beacons.tmp
+    done < mesh-window-$sta.dat
 
 	let $((i++))
 done

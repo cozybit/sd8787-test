@@ -292,7 +292,7 @@ def fw_add_peer(ifindex, mac=None):
         print "please specify a peer mac address to add!"
         raise
 
-    ALL_RATES=0xfff
+    ALL_RATES=0xffff
     macbytes = struct.pack("<6B", *[int(x,16) for x in mac.split(":")])
     do_cmd(MWL8787_CMD_SET_PEER, "<" + str(len(str(macbytes))) + "sI", str(macbytes), ALL_RATES)
 

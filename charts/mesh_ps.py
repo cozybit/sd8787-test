@@ -111,7 +111,7 @@ for ts, pkt in pc:
             if dest in windows:
                 windows[dest]['end'] = ts + 10 * 1024
 
-    print >>sta_files[sta], '%s %s %s %d %d %s %d %d' % (ts, sta, bcn_ts, rspi, eosp, ps_mode, beacon, dtim)
+    print >>sta_files[sta], '%s %s %s %d %d %s %d %d %d' % (ts, sta, bcn_ts, rspi, eosp, ps_mode, bcn_ts % 1024000, beacon, dtim)
 
 for sta in sorted(sta_files):
     sta_files[sta].close()

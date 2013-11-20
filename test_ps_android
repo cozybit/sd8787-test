@@ -1,0 +1,34 @@
+#!/bin/bash
+
+PHONE0=GT6
+PHONE1=GT7
+PHONES="$PHONE0 $PHONE1"
+
+MESHID=thomas
+CHANNEL=36
+
+__adbs() {
+	local phone=$1
+	shift 1
+
+	adbs -s $phone shell $*
+}
+
+for phone in $PHONES; do
+	__adbs $phone iw wlan0 interface add mesh0 type mp
+	__adbs $phone ip link set mesh0 up
+	__adbs $phone iw mesh0 set channel $CHANNEL HT20
+	__adbs $phone iw mesh0 mesh join $MESHID dtim-period 4
+	__adbs $phone ip route add 224.0.0.0/8 dev mesh0
+done
+
+sleep 2
+
+for phone in $PHONES; do
+	peer=`__adbs $phone iw mesh0 station dump | grep Station | awk '{print $2}'`
+	__adbs $phone iw mesh0 station set $peer mesh_power_mode light
+done
+
+sleep 1
+
+__adbs $phone iperf -c 224.0.0.0 -u -b100 -t10000

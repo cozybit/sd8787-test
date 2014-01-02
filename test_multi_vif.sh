@@ -36,9 +36,9 @@ connect_mesh () {
 connect_ap () {
 	# managed
 	echo "add managed if..."
-	sudo ip addr add dev $IFACE 192.168.0.33/24
 	link_up $IFACE
-	sudo iw dev $IFACE connect -w cozyguest || echo "failed to connect to ap"
+	sudo iw dev $IFACE connect -w lets_connect | grep fail && echo "failed to connect to ap"
+	udhcpc -i$IFACE
 }
 
 usage () {

@@ -1,5 +1,4 @@
 #!/bin/bash
-
 source `dirname $0`/common.sh
 
 CH=11
@@ -16,7 +15,6 @@ echo "add mesh if..."
 sudo iw phy $PHY_8787 interface add mesh0 type mp
 # change the mac address
 setmac mesh0 00:19:88:52:75:86
-sudo ip addr add dev mesh0 192.168.0.55/24
 
 # managed
 echo "add managed if..."
@@ -28,10 +26,12 @@ declare -A bss1
 bss1[ssid]=mymesh
 bss1[channel]=11
 bss1[ch_type]=NO_HT
+bss1[ip]=192.168.0.55
 
 declare -A meshable
 meshable[if]="mesh0"
 set_bss meshable bss1
+assign_ip meshable bss1
 
 # if_up in start_mesh is trying to add the routing magic
 start_mesh meshable

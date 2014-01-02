@@ -17,11 +17,11 @@ testmode() {
 }
 
 reload_card() {
-	sudo modprobe -r $DRIVER
 	# XXX: rfkill?
-	echo "reload card..."
-	read
-	sudo modprobe mwl8787_sdio
+	echo "reloading card..."
+	phy=$(get_phy $IFACE)
+	echo 0 > /sys/kernel/debug/ieee80211/phy$phy/mwl8787/reset || fail "Couldn't reload card"
+	# sudo modprobe mwl8787_sdio
 	# wait for firmware load
 	sleep 3
 }
@@ -288,6 +288,16 @@ get_throughput () {
 	[ -z "$iperf_log" ] && { echo "no iperf log?"; return 1; }
 
 	echo -n $(cat $iperf_log | grep -v "out-of-order" | grep -v "^$" | tail -n1 | sed -e 's/.* \([0-9]*\.*[0-9]*\) [[:alpha:]]bits.*/\1/')
+}
+
+# get phy for interface
+# get_phy $interface
+get_phy () {
+	local if=$1
+	# if zero or more than one match, bail out
+	[ "`iw $if info | grep wiphy | wc -l`" == "1" ] || fail "Unable to find phy from $if"
+	phy=`iw $if info | grep wiphy | cut -d' ' -f2`
+	echo $phy
 }
 
 kill_routes () {

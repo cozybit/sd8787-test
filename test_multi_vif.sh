@@ -38,7 +38,7 @@ connect_ap () {
 	echo "add managed if..."
 	link_up $IFACE
 	sudo iw dev $IFACE connect -w lets_connect | grep fail && echo "failed to connect to ap"
-	udhcpc -i$IFACE
+	sudo udhcpc -i$IFACE
 }
 
 usage () {

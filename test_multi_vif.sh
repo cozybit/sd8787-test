@@ -1,7 +1,7 @@
 #!/bin/bash
 source `dirname $0`/common.sh
 
-CH=11
+CH=6
 CAP_FILE=out.cap
 PAYLOAD="01234567890123456789"
 
@@ -20,7 +20,7 @@ connect_mesh () {
 
 	declare -A bss1
 	bss1[ssid]=mymesh
-	bss1[channel]=11
+	bss1[channel]=${CH}
 	bss1[ch_type]=NO_HT
 	bss1[ip]=192.168.0.55
 

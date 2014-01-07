@@ -17,13 +17,25 @@ testmode() {
 }
 
 reload_card() {
-	sudo modprobe -r $DRIVER
-	# XXX: rfkill?
-	echo "reload card..."
-	read
-	sudo modprobe mwl8787_sdio
-	# wait for firmware load
-	sleep 3
+	if [ check_debugfs ]; then
+		echo "reloading card automatically..."
+su <<EOF
+		echo 1 > /sys/kernel/debug/ieee80211/$(if2phy $IFACE)/mwl8787/reset
+EOF
+		sleep 10
+	else
+		sudo modprobe -r $DRIVER
+		# XXX: rfkill?
+		echo "reload card..."
+		read
+		sudo modprobe mwl8787_sdio
+		# wait for firmware load
+		sleep 3
+	fi
+}
+
+check_debugfs() {
+	mount | grep debugfs > /dev/null
 }
 
 set_monitor() {
